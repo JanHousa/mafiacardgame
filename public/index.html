@@ -5,7 +5,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Mafia Stand-off – Realtime</title>
   <style>
-    :root{--bg:#0e1116;--panel:#151a22;--muted:#8fa1b3;--text:#e7edf3;--accent:#5eead4;--accent-2:#7aa2ff;--card:#1c2430;--card-2:#232e3b;--shadow:0 10px 25px rgba(0,0,0,.35);--radius:18px}
+    :root{
+  --bg:#0e1116;--panel:#0f141c;--glass:#0d1320cc;--muted:#93a4b8;--text:#ecf2f8;
+  --accent:#5eead4;--accent-2:#7aa2ff;--warn:#ff7b7b;--ok:#7bffbd;
+  --stroke:#2a3b52;--shadow:0 20px 60px rgba(0,0,0,.45);--radius:20px
+}
     *{box-sizing:border-box} html,body{height:100%}
     body{margin:0;background:radial-gradient(1200px 800px at 10% -10%,#1a2230 0%,var(--bg) 60%) fixed;color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial}
     a{color:var(--accent)} #app{max-width:1200px;margin:0 auto;padding:16px 16px 24px}
@@ -49,27 +53,152 @@
     .ask-box{background:linear-gradient(180deg,#17202c,#0e141c);border:1px solid #2a3b52;border-radius:16px;padding:16px;max-width:520px;width:100%;box-shadow:var(--shadow)}
     .ask-cta{display:flex;gap:10px;margin-top:10px}
     @media (max-width:930px){.table{grid-template-columns:1fr}.center{grid-template-columns:1fr}}
+    /* === LOBBY – nový vzhled === */
+.lobby-hero{
+  position:relative; overflow:hidden; border-radius:var(--radius);
+  background:radial-gradient(1200px 800px at -10% -20%,#1b2536 0%,var(--panel) 60%);
+  border:1px solid rgba(255,255,255,.06); box-shadow:var(--shadow); padding:0;
+}
+.lobby-art{
+  position:absolute; inset:0; pointer-events:none; opacity:.18; mix-blend:screen;
+}
+.lobby-wrap{ display:grid; grid-template-columns: 1.1fr .9fr; gap:0; }
+.lobby-left{ padding:26px 24px 20px 24px; display:flex; flex-direction:column; gap:14px; backdrop-filter: blur(10px); background: linear-gradient(180deg,transparent, transparent 60%, rgba(255,255,255,.02)); }
+.lobby-right{ padding:22px; border-left:1px solid rgba(255,255,255,.06); background:linear-gradient(180deg, rgba(255,255,255,.02), transparent); }
+
+.lobby-title{ display:flex; align-items:center; gap:10px; }
+.logo-chip{
+  width:42px;height:42px;border-radius:14px; display:grid; place-items:center;
+  background:linear-gradient(180deg,#1f2836,#121824); border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 6px 16px rgba(0,0,0,.35);
+}
+.brand{ font-size:22px; font-weight:900; letter-spacing:.3px; }
+.sub{ color:var(--muted); }
+
+.lobby-actions{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.glass{
+  background:linear-gradient(180deg,var(--glass), #0b111b77);
+  border:1px solid rgba(255,255,255,.12); border-radius:18px; padding:14px;
+}
+.field{ display:flex; gap:10px; align-items:center; }
+.input.big{ padding:14px 14px; border-radius:14px; font-weight:600; letter-spacing:.6px; text-transform:uppercase }
+.btn.pill{ border-radius:999px; padding:12px 16px; font-weight:800 }
+
+.lobby-code{
+  display:inline-flex; align-items:center; gap:8px; font-weight:800; letter-spacing:1.4px;
+  background:linear-gradient(180deg,#1b2331,#111824); padding:8px 12px; border-radius:999px;
+  border:1px solid rgba(255,255,255,.12);
+}
+.lobby-meta{ display:flex; gap:12px; flex-wrap:wrap; color:#a9bad0; font-size:13px }
+
+.players-card .list{ margin-top:6px; line-height:1.6; }
+.players-card .dot{ width:8px;height:8px;border-radius:50%; background:#7aa2ff; display:inline-block; margin-right:8px; }
+
+.cta-row{ display:flex; gap:10px; flex-wrap:wrap; }
+.btn.primary{ background:linear-gradient(180deg,#2a3344,#18202e); border-color:#3b4a63 }
+.btn.secondary{ background:linear-gradient(180deg,#1f2836,#151b25) }
+.btn.success{ background:linear-gradient(180deg,#1f3a2e,#10261f); border-color:#1b6b53 }
+
+.hint{ color:#a7b9cf; font-size:12px; }
+@media (max-width:980px){ .lobby-wrap{ grid-template-columns:1fr } .lobby-right{ border-left:none; border-top:1px solid rgba(255,255,255,.06) } }
+
+/* drobnosti, ať to sedne na zbytek */
+.input{ background:#0f141b; border:1px solid var(--stroke); color:var(--text) }
+.btn{ border:1px solid rgba(255,255,255,.12) }
   </style>
 </head>
 <body>
   <div id="app" class="grid">
     <!-- LOBBY -->
-    <section class="panel" id="lobbyPanel">
-      <div class="title">🔗 Lobby</div>
-      <div class="row" style="margin-top:8px">
-        <input id="name" class="input" placeholder="Vaše jméno" />
-        <button id="createBtn" class="btn btn-primary">Vytvořit lobby</button>
-        <input id="joinId" class="input" placeholder="Kód lobby (např. ABCD)" style="width:140px" />
-        <button id="joinBtn" class="btn">Připojit</button>
+    <section class="panel lobby-hero" id="lobbyPanel">
+  <!-- ilustrační „obrázek“ – inline SVG (bez assetů) -->
+  <svg class="lobby-art" viewBox="0 0 1200 400" preserveAspectRatio="none" aria-hidden="true">
+    <defs>
+      <linearGradient id="g1" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#7aa2ff"/>
+        <stop offset="1" stop-color="#5eead4"/>
+      </linearGradient>
+    </defs>
+    <!-- siluety „mafie“ -->
+    <g fill="url(#g1)" opacity=".55">
+      <path d="M90 360c0-55 40-100 90-100s90 45 90 100H90z"/>
+      <rect x="150" y="160" width="60" height="100" rx="8"/>
+      <circle cx="180" cy="140" r="28"/>
+      <path d="M310 360c0-65 45-120 100-120s100 55 100 120H310z"/>
+      <rect x="380" y="150" width="70" height="115" rx="10"/>
+      <circle cx="415" cy="125" r="30"/>
+      <path d="M690 360c0-75 55-140 120-140s120 65 120 140H690z"/>
+      <rect x="770" y="140" width="80" height="120" rx="12"/>
+      <circle cx="810" cy="112" r="34"/>
+    </g>
+    <!-- diagonální linky -->
+    <g stroke="url(#g1)" stroke-width="1" opacity=".25">
+      <path d="M0 320 L1200 80"/>
+      <path d="M0 360 L1200 120"/>
+      <path d="M0 280 L1200 40"/>
+    </g>
+  </svg>
+
+  <div class="lobby-wrap">
+    <!-- LEFT: brand + create -->
+    <div class="lobby-left">
+      <div class="lobby-title">
+        <div class="logo-chip">🕴️</div>
+        <div>
+          <div class="brand">Mafia Stand-off</div>
+          <div class="sub">Real-time party card game • až 7 hráčů</div>
+        </div>
       </div>
-      <div id="lobbyInfo" class="muted" style="margin-top:10px"></div>
-      <div id="players" style="margin-top:8px"></div>
-      <div class="row" style="margin-top:8px">
-        <button id="readyBtn" class="btn">Jsem připraven</button>
-        <button id="startBtn" class="btn btn-primary" disabled>Start hry (host)</button>
+
+      <div class="glass">
+        <div class="sub" style="margin-bottom:8px">Vytvořit novou hru</div>
+        <div class="field">
+          <input id="name" class="input big" placeholder="Vaše jméno" />
+          <button id="createBtn" class="btn pill primary">+ Vytvořit lobby</button>
+        </div>
+        <div class="lobby-meta" style="margin-top:10px">
+          <span>⚡ Peer-to-peer pocit • 🧊 WS realtime • 🔒 role skryté</span>
+        </div>
       </div>
-      <p class="muted" style="margin-top:8px">Hra podporuje 2–7 hráčů. Don je vždy odhalený.</p>
-    </section>
+
+      <div class="glass players-card">
+        <div class="sub" style="margin-bottom:6px">Hráči v lobby</div>
+        <div id="players" class="list muted"><span class="hint">Zatím nikdo…</span></div>
+        <div class="cta-row" style="margin-top:10px">
+          <button id="readyBtn" class="btn pill secondary">Jsem připraven</button>
+          <button id="startBtn" class="btn pill success" disabled>▶ Start hry (host)</button>
+        </div>
+        <div id="lobbyInfo" class="hint" style="margin-top:8px"></div>
+      </div>
+
+      <div class="hint">Tip: sdílej kód lobby, ať se ostatní rychle připojí.</div>
+    </div>
+
+    <!-- RIGHT: join -->
+    <div class="lobby-right">
+      <div class="glass">
+        <div class="sub" style="margin-bottom:8px">Připojit se ke hře</div>
+        <div class="field">
+          <input id="joinId" class="input big" placeholder="Kód lobby (např. ABCD)" style="width:100%;max-width:260px" />
+          <button id="joinBtn" class="btn pill">Připojit</button>
+        </div>
+        <div style="margin-top:12px">
+          <span class="lobby-code">KÓD: <span id="codeMirror">—</span></span>
+        </div>
+      </div>
+
+      <div class="glass" style="margin-top:12px">
+        <div class="sub">Jak to funguje?</div>
+        <ul class="muted" style="margin:6px 0 0 18px; line-height:1.6">
+          <li>Host klikne „Vytvořit lobby“ – objeví se kód.</li>
+          <li>Ostatní zadají kód a kliknou „Připojit“.</li>
+          <li>Jakmile je vás min. 2, host může „Start hry“.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
 
     <!-- BOARD -->
     <section class="panel" id="boardPanel" style="display:none">
@@ -187,13 +316,28 @@
     startBtn.onclick  = ()=> send({ type:'start' });
 
     function updateLobby(lobby){
-      window.__lobby = lobby;
-      lobbyInfo.textContent = lobby ? `Kód lobby: ${lobby.lobbyId}  •  Host: ${short(lobby.hostId)} • Hráčů: ${lobby.players.length}` : '';
-      playersDiv.innerHTML = lobby.players.map(p=>`• ${p.name} ${p.id===lobby.hostId?'(host)':''}`).join('<br/>');
-      const iAmHost = (myId() && lobby && myId()===lobby.hostId);
-      startBtn.disabled = !(iAmHost && lobby.players.length>=2);
-      if (lobby.started){ lobbyPanel.style.display='none'; boardPanel.style.display='block'; roomTag.textContent = `Lobby ${lobby.lobbyId}`; }
-    }
+  window.__lobby = lobby;
+  const infoEl = document.getElementById('lobbyInfo');
+  const codeMirror = document.getElementById('codeMirror');
+  infoEl.textContent = lobby ? `Kód lobby: ${lobby.lobbyId}  •  Host: ${short(lobby.hostId)} • Hráčů: ${lobby.players.length}` : '';
+  if (codeMirror) codeMirror.textContent = lobby ? lobby.lobbyId : '—';
+
+  const playersDiv = document.getElementById('players');
+  playersDiv.innerHTML = lobby.players.length
+    ? lobby.players.map(p => `<span class="dot"></span>${p.name} ${p.id===lobby.hostId?'(host)':''}`).join('<br/>')
+    : '<span class="hint">Zatím nikdo…</span>';
+
+  const startBtn = document.getElementById('startBtn');
+  const iAmHost = (myId() && lobby && myId()===lobby.hostId);
+  startBtn.disabled = !(iAmHost && lobby.players.length>=2);
+
+  if (lobby.started){
+    document.getElementById('lobbyPanel').style.display='none';
+    document.getElementById('boardPanel').style.display='block';
+    document.getElementById('roomTag').textContent = `Lobby ${lobby.lobbyId}`;
+  }
+}
+
 
     function myId(){ return window.__myId||null; }
     function short(x){ return x ? x.slice(0,4)+'…' : ''; }
