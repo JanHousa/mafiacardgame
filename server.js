@@ -612,9 +612,22 @@ wss.on("connection",(ws)=>{
       broadcast(lobby,"lobby",(v)=>({ lobby:lobbySummary(lobby), youId:v.id }));
     }
     else if (msg.type==="start"){
-      const lobby = lobbies.get(ws._lobbyId); if(!lobby) return;
+      const lobby = lobbies.get(ws._lobbyId); if (!lobby) return;
       if (ws._playerId !== lobby.hostId) return;
-      if (lobby.players.length<2) return;
+
+      // >= 2 hráči a všichni ready?
+      const enough = lobby.players.length >= 2;
+      const allReady = lobby.players.every(p => p.ready === true);
+
+      if (!enough) {
+        ws.send(JSON.stringify({ type:"error", message:"Potřebujete alespoň 2 hráče." }));
+        return;
+      }
+      if (!allReady) {
+        ws.send(JSON.stringify({ type:"error", message:"Hru lze spustit až když jsou všichni připraveni." }));
+        return;
+      }
+
       startGame(lobby);
     }
     else if (msg.type==="endTurn"){

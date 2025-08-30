@@ -312,31 +312,48 @@
 
     createBtn.onclick = ()=> send({ type:'create', name: nameInp.value });
     joinBtn.onclick   = ()=> send({ type:'join', lobbyId: joinIdInp.value, name: nameInp.value });
-    readyBtn.onclick  = ()=> send({ type:'ready', ready: true });
+    readyBtn.onclick = () => {
+      const me = (window.__lobby?.players||[]).find(p => p.id === myId());
+      const next = !me?.ready;
+      send({ type:'ready', ready: next });
+    };
     startBtn.onclick  = ()=> send({ type:'start' });
 
     function updateLobby(lobby){
-  window.__lobby = lobby;
-  const infoEl = document.getElementById('lobbyInfo');
-  const codeMirror = document.getElementById('codeMirror');
-  infoEl.textContent = lobby ? `Kód lobby: ${lobby.lobbyId}  •  Host: ${short(lobby.hostId)} • Hráčů: ${lobby.players.length}` : '';
-  if (codeMirror) codeMirror.textContent = lobby ? lobby.lobbyId : '—';
+      window.__lobby = lobby;
 
-  const playersDiv = document.getElementById('players');
-  playersDiv.innerHTML = lobby.players.length
-    ? lobby.players.map(p => `<span class="dot"></span>${p.name} ${p.id===lobby.hostId?'(host)':''}`).join('<br/>')
-    : '<span class="hint">Zatím nikdo…</span>';
+      const infoEl = document.getElementById('lobbyInfo');
+      const codeMirror = document.getElementById('codeMirror');
+      infoEl.textContent = lobby ? `Kód lobby: ${lobby.lobbyId}  •  Host: ${short(lobby.hostId)} • Hráčů: ${lobby.players.length}` : '';
+      if (codeMirror) codeMirror.textContent = lobby ? lobby.lobbyId : '—';
 
-  const startBtn = document.getElementById('startBtn');
-  const iAmHost = (myId() && lobby && myId()===lobby.hostId);
-  startBtn.disabled = !(iAmHost && lobby.players.length>=2);
+      // seznam hráčů + indikátor připravenosti
+      const playersDiv = document.getElementById('players');
+      playersDiv.innerHTML = lobby.players.length
+        ? lobby.players.map(p =>
+            `<span class="dot" style="background:${p.ready?'#3be3a5':'#64748b'}"></span>${p.name} ${p.id===lobby.hostId?'(host)':''}`
+          ).join('<br/>')
+        : '<span class="hint">Zatím nikdo…</span>';
 
-  if (lobby.started){
-    document.getElementById('lobbyPanel').style.display='none';
-    document.getElementById('boardPanel').style.display='block';
-    document.getElementById('roomTag').textContent = `Lobby ${lobby.lobbyId}`;
-  }
-}
+      // toggle textu tlačítka Ready
+      const me = lobby.players.find(p => p.id === myId());
+      const readyBtn = document.getElementById('readyBtn');
+      if (me) readyBtn.textContent = me.ready ? 'Zrušit připravenost' : 'Jsem připraven';
+
+      // start je možný jen když všichni ready a min. 2 hráči
+      const startBtn = document.getElementById('startBtn');
+      const iAmHost = (myId() && lobby && myId()===lobby.hostId);
+      const enough = lobby.players.length >= 2;
+      const allReady = lobby.players.every(p => p.ready === true);
+      startBtn.disabled = !(iAmHost && enough && allReady);
+
+      if (lobby.started){
+        document.getElementById('lobbyPanel').style.display='none';
+        document.getElementById('boardPanel').style.display='block';
+        document.getElementById('roomTag').textContent = `Lobby ${lobby.lobbyId}`;
+      }
+    }
+
 
 
     function myId(){ return window.__myId||null; }
