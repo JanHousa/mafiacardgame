@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Western Shots – Realtime</title>
+  <title>Mafia Stand-off – Realtime</title>
   <style>
     :root{--bg:#0e1116;--panel:#151a22;--muted:#8fa1b3;--text:#e7edf3;--accent:#5eead4;--accent-2:#7aa2ff;--card:#1c2430;--card-2:#232e3b;--shadow:0 10px 25px rgba(0,0,0,.35);--radius:18px}
     *{box-sizing:border-box} html,body{height:100%}
@@ -23,19 +23,21 @@
     .who{display:flex;align-items:center;justify-content:space-between;gap:8px}
     .role-pill{font-size:12px;padding:4px 8px;border-radius:999px;background:#1f2937;color:#b7c5d8;border:1px solid rgba(255,255,255,.06)}
     .role-pill.revealed{background:#253044;color:#cfe3ff}
+    .status{display:flex;gap:6px;flex-wrap:wrap}
+    .badge{font-size:12px;padding:3px 8px;border-radius:10px;border:1px solid rgba(255,255,255,.08);color:#d3deea;background:#1e2633}
     .hearts{display:flex;gap:2px} .heart{font-size:16px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
     .cards{font-size:13px;color:var(--muted)}
     .dead .overlay{position:absolute;inset:0;border-radius:var(--radius);background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;font-weight:800;color:#ffb4b4;font-size:22px;letter-spacing:1px}
     .center{display:grid;grid-template-columns:1fr 1fr;gap:14px}
     .hand{display:flex;flex-wrap:wrap;gap:10px;min-height:90px}
-    .card{width:122px;min-height:82px;background:linear-gradient(180deg,var(--card-2),var(--card));border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:8px;display:flex;flex-direction:column;gap:6px;cursor:pointer;position:relative;box-shadow:var(--shadow);transition:transform .12s,border-color .12s}
+    .card{width:140px;min-height:86px;background:linear-gradient(180deg,var(--card-2),var(--card));border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:8px;display:flex;flex-direction:column;gap:6px;cursor:pointer;position:relative;box-shadow:var(--shadow);transition:transform .12s,border-color .12s}
     .card .ct{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:#c6d7ee;opacity:.9}
     .card .emoji{font-size:20px}
     .card .text{font-size:12px;color:#b8c5d7}
     .card:hover{transform:translateY(-2px);border-color:#7aa2ff77}
     .card.sel{outline:2px solid var(--accent-2);transform:translateY(-2px)}
     .target{outline:2px dashed #9dd1ff;border-radius:12px}
-    .log{padding:12px;max-height:240px;overflow:auto}
+    .log{padding:12px;max-height:260px;overflow:auto}
     .hud{font-size:12px;color:#9fb4cc}
     .overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:40;padding:20px}
     .overlay.show{display:flex}
@@ -60,14 +62,16 @@
         <button id="readyBtn" class="btn">Jsem připraven</button>
         <button id="startBtn" class="btn btn-primary" disabled>Start hry (host)</button>
       </div>
+      <p class="muted" style="margin-top:8px">Hra podporuje 2–7 hráčů. Don je vždy odhalený.</p>
     </section>
 
     <!-- BOARD -->
     <section class="panel" id="boardPanel" style="display:none">
       <div class="row" style="justify-content:space-between">
         <div>
-          <b>🤠 Western Shots</b> <span class="muted" id="roomTag"></span>
+          <b>🕴️ Mafia Stand-off</b> <span class="muted" id="roomTag"></span>
           <div class="hud" id="hud"></div>
+          <div class="hud" id="continental"></div>
         </div>
         <div class="row">
           <button id="endTurn" class="btn">⏭️ Konec tahu</button>
@@ -115,18 +119,15 @@
 
   <script>
     /* ---------- WS ---------- */
-    const ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host);
-    const send = (obj) => { if(ws.readyState!==1){ addLog('❗ Spojení není připraveno.'); return false; } ws.send(JSON.stringify(obj)); return true; };
+    const ws = new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host);
+    const send = (obj)=>{ if(ws.readyState!==1){ addLog('❗ Spojení není připraveno.'); return false; } ws.send(JSON.stringify(obj)); return true; };
 
-    ws.addEventListener('message', (ev) => {
+    ws.addEventListener('message',(ev)=>{
       const msg = JSON.parse(ev.data);
-      if (msg.type === 'lobby') {
-        if (msg.youId) window.__myId = msg.youId;
-        updateLobby(msg.lobby);
-      }
-      if (msg.type === 'info') addLog(msg.message);
-      if (msg.type === 'error') addLog('❗ ' + msg.message);
-      if (msg.type === 'state') applyState(msg.state);
+      if (msg.type==='lobby'){ if(msg.youId) window.__myId = msg.youId; updateLobby(msg.lobby); }
+      if (msg.type==='info'){ addLog(msg.message); }
+      if (msg.type==='error'){ addLog('❗ '+msg.message); }
+      if (msg.type==='state'){ applyState(msg.state); }
     });
 
     /* ---------- LOBBY UI ---------- */
@@ -142,28 +143,27 @@
     const startBtn = document.getElementById('startBtn');
     const roomTag = document.getElementById('roomTag');
 
-    createBtn.onclick = () => send({ type:'create', name: nameInp.value });
-    joinBtn.onclick   = () => send({ type:'join', lobbyId: joinIdInp.value, name: nameInp.value });
-    readyBtn.onclick  = () => send({ type:'ready', ready: true });
-    startBtn.onclick  = () => send({ type:'start' });
+    createBtn.onclick = ()=> send({ type:'create', name: nameInp.value });
+    joinBtn.onclick   = ()=> send({ type:'join', lobbyId: joinIdInp.value, name: nameInp.value });
+    readyBtn.onclick  = ()=> send({ type:'ready', ready: true });
+    startBtn.onclick  = ()=> send({ type:'start' });
 
     function updateLobby(lobby){
       window.__lobby = lobby;
-      lobbyInfo.textContent = lobby ? `Kód lobby: ${lobby.lobbyId}  •  Host: ${short(lobby.hostId)}` : '';
-      playersDiv.innerHTML = lobby.players.map(p => `• ${p.name} ${p.id===lobby.hostId?'(host)':''}`).join('<br/>');
+      lobbyInfo.textContent = lobby ? `Kód lobby: ${lobby.lobbyId}  •  Host: ${short(lobby.hostId)} • Hráčů: ${lobby.players.length}` : '';
+      playersDiv.innerHTML = lobby.players.map(p=>`• ${p.name} ${p.id===lobby.hostId?'(host)':''}`).join('<br/>');
 
-      const iAmHost = (myId() && lobby && myId() === lobby.hostId);
-      startBtn.disabled = !(iAmHost && lobby.players.length >= 2);
+      const iAmHost = (myId() && lobby && myId()===lobby.hostId);
+      startBtn.disabled = !(iAmHost && lobby.players.length>=2);
 
-      if (lobby.started) {
-        // přepnout do herní obrazovky; server stejně pošle "state"
-        lobbyPanel.style.display = 'none';
-        boardPanel.style.display = 'block';
+      if (lobby.started){
+        lobbyPanel.style.display='none';
+        boardPanel.style.display='block';
         roomTag.textContent = `Lobby ${lobby.lobbyId}`;
       }
     }
 
-    function myId(){ return window.__myId || null; }
+    function myId(){ return window.__myId||null; }
     function short(x){ return x ? x.slice(0,4)+'…' : ''; }
 
     /* ---------- BOARD UI ---------- */
@@ -177,20 +177,38 @@
     const endTurnBtn = document.getElementById('endTurn');
     const backLobbyBtn = document.getElementById('backLobby');
     const hud = document.getElementById('hud');
+    const continental = document.getElementById('continental');
 
-    backLobbyBtn.onclick = () => { boardPanel.style.display='none'; lobbyPanel.style.display='block'; };
+    backLobbyBtn.onclick = ()=>{ boardPanel.style.display='none'; lobbyPanel.style.display='block'; };
 
-    let STATE = null;       // personalized view from server
-    let selectedCard = null;
+    let STATE=null, selectedCard=null;
 
-    function addLog(msg){ const p=document.createElement('div'); p.textContent = msg; logEl.appendChild(p); logEl.scrollTop = logEl.scrollHeight; }
+    function addLog(msg){ const p=document.createElement('div'); p.textContent = msg; logEl.appendChild(p); logEl.scrollTop=logEl.scrollHeight; }
 
-    const META = {
-      SHOT:{emoji:'🔫',name:'Výstřel',desc:'Zraň cíl za 1. Cíl může zahrát 🛡️ Úhyb.'},
-      DODGE:{emoji:'🛡️',name:'Úhyb',desc:'Reakce na Výstřel. Zruší zásah.'},
-      BEER:{emoji:'🍺',name:'Pivo',desc:'Vyléčí 1 život (max. do plna).'},
-      DRAW2:{emoji:'➕2',name:'Lízni 2',desc:'Vezmi si 2 karty.'},
-      DRAW3:{emoji:'➕3',name:'Lízni 3',desc:'Vezmi si 3 karty.'}
+    const META={
+      // Attacks & reactions
+      SHOT:{emoji:'🔫',name:'Výstřel',desc:'Střel na cíl do dostřelu zbraně. Obránce může 🛡️.'},
+      DODGE:{emoji:'🛡️',name:'Úhyb',desc:'Reakce na Výstřel.'},
+      KNIFE:{emoji:'🔪',name:'Nůž',desc:'Zraň cíl ve vzdálenosti 1.'},
+      MOLOTOV:{emoji:'🍾',name:'Molotov',desc:'Zraň cíl ve vzdálenosti 1.'},
+      SHOOTOUT:{emoji:'🤜🤛',name:'Přestřelka',desc:'Všichni ostatní musí odhodit 🔫 nebo utrží 1.'},
+      SPRAY:{emoji:'🌪️',name:'Tommy Gun Spray',desc:'Všichni ostatní musí odhodit 🛡️ nebo utrží 1.'},
+      VENDETTA:{emoji:'🗡️',name:'Vendeta',desc:'Střídavě odhazujte 🔫; kdo nemá, utrží 1.'},
+      // Heals
+      WHISKEY:{emoji:'🥃',name:'Whiskey',desc:'+1 život.'},
+      CIGAR:{emoji:'🚬',name:'Doutník',desc:'+1 život.'},
+      // Control
+      PRISON:{emoji:'🚔',name:'Vězení',desc:'Cíl vynechá kolo, pokud nehodí 🚔 na začátku tahu.'},
+      EXTORTION:{emoji:'💰',name:'Výpalné',desc:'Vem libovolnou kartu z cíle (ruka/výbava).'},
+      RAID:{emoji:'🔥',name:'Razie',desc:'Spal cíli náhodnou kartu (ruka/výbava).'},
+      // Equipment
+      W_SAWED:{emoji:'🧩',name:'Sawed-off',desc:'Zbraň: dostřel 2.'},
+      W_DOUBLE:{emoji:'🧩',name:'Double-barrel',desc:'Zbraň: dostřel 2.'},
+      W_COLT:{emoji:'🧩',name:'Colt 1911',desc:'Zbraň: dostřel 3.'},
+      W_TOMMY:{emoji:'🧩',name:'Tommy Gun',desc:'Zbraň: dostřel 3, neomezené 🔫.'},
+      W_WINCH:{emoji:'🧩',name:'Winchester',desc:'Zbraň: dostřel 4.'},
+      W_SPRING:{emoji:'🧩',name:'Springfield',desc:'Zbraň: dostřel 5.'},
+      VEST:{emoji:'🦺',name:'Neprůstřelná vesta',desc:'Při 🔫 hoď kostkou; na ❤️ ignoruješ zásah.'},
     };
 
     function applyState(s){
@@ -200,68 +218,70 @@
       deckCountEl.textContent = s.deckCount;
       discardCountEl.textContent = s.discardCount;
       turnNameEl.textContent = findName(s.turnPlayerId) || '—';
+      continental.textContent = s.roundNote ? `🃏 Kontinentál: ${s.roundNote}` : '';
 
-      hud.textContent = `Moje ID: ${short(myId()||'')} • Na tahu: ${findName(s.turnPlayerId)||'—'} ${isMyTurn()?'(JÁ)':''}`;
+      // HUD – ukaž role jen pokud jsou odhalené nebo jsem to já
+      const myRole = s.you.role ? `• Moje role: ${s.you.role}` : '';
+      hud.textContent = `Na tahu: ${findName(s.turnPlayerId)||'—'} ${isMyTurn()?'(JÁ)':''} ${myRole}`;
 
-      // me hearts
+      // hearts
       meHearts.innerHTML = '';
-      for (let i=0;i<s.you.maxHp;i++){
-        const span = document.createElement('span');
-        span.className='heart';
-        span.textContent = i<s.you.hp ? '❤️' : '🤍';
+      for(let i=0;i<s.you.maxHp;i++){
+        const span=document.createElement('span'); span.className='heart';
+        span.textContent = i<s.you.hp ? '❤' : '🤍';
         meHearts.appendChild(span);
       }
 
       // hand
-      handEl.innerHTML = '';
+      handEl.innerHTML='';
       (s.you.hand||[]).forEach(card=>{
-        const meta = META[card.type];
-        const div = document.createElement('div');
-        div.className='card';
-        div.setAttribute('data-card-id', card.id);
-        div.innerHTML = `<div class="ct">${meta.name}</div><div class="emoji">${meta.emoji}</div><div class="text">${meta.desc}</div>`;
-        div.onclick = () => onPlay(card);
+        const m = META[card.type]||{name:card.type,emoji:'🃏',desc:''};
+        const div=document.createElement('div');
+        div.className='card'; div.setAttribute('data-card-id',card.id);
+        div.innerHTML=`<div class="ct">${m.name}</div><div class="emoji">${m.emoji}</div><div class="text">${m.desc}</div>`;
+        div.onclick = ()=> onPlay(card);
         handEl.appendChild(div);
       });
 
       // table
       renderOpponents(true);
 
-      // reakce
+      // pending reaction – Úhyb
       if (s.pending && s.pending.type==='SHOT' && s.pending.askYouToDodge){
         showAsk('Úhyb?', 'Byli jste terčem 🔫 Výstřelu. Zahrát 🛡️ Úhyb?', ()=>{
           send({ type:'reaction', choice:'DODGE' }); hideAsk();
         }, ()=>{
           send({ type:'reaction', choice:'TAKE_HIT' }); hideAsk();
         });
-      } else {
-        hideAsk();
-      }
+      } else hideAsk();
 
       endTurnBtn.disabled = !isMyTurn() || !!s.pending;
     }
 
     function renderOpponents(resetTargets=false){
-      tableEl.innerHTML = '';
+      tableEl.innerHTML='';
       (STATE?.others||[]).forEach(op=>{
-        const wrap = document.createElement('div');
-        wrap.className = 'opponent' + (op.dead?' dead':'');
-        wrap.setAttribute('data-player-id', op.id);
+        const wrap=document.createElement('div');
+        wrap.className='opponent'+(op.dead?' dead':'');
+        wrap.setAttribute('data-player-id',op.id);
+        const roleHTML = `<div class="role-pill ${op.roleRevealed?'revealed':''}">${op.roleRevealed ? (op.role||'—') : 'Neznámá'}</div>`;
+        const statusHTML = `
+          <div class="status">
+            ${op.inPrison?'<span class="badge">🚔 Ve vězení</span>':''}
+            ${op.weapon?`<span class="badge">🔧 ${op.weapon.name}</span>`:''}
+            ${op.vest?'<span class="badge">🦺 Vesta</span>':''}
+          </div>`;
         wrap.innerHTML = `
-          <div class="who">
-            <div>${op.name}</div>
-            <div class="role-pill ${op.roleRevealed?'revealed':''}">${op.roleRevealed ? (op.role || '—') : 'Neznámá'}</div>
-          </div>
-          <div class="hearts">${'❤️'.repeat(op.hp)}${'🤍'.repeat(Math.max(0, op.maxHp-op.hp))}</div>
+          <div class="who"><div>${op.name}</div>${roleHTML}</div>
+          ${statusHTML}
+          <div class="hearts">${'❤'.repeat(op.hp)}${'🤍'.repeat(Math.max(0, op.maxHp-op.hp))}</div>
           <div class="cards">Karty v ruce: ${op.handCount}</div>
         `;
         tableEl.appendChild(wrap);
       });
-
-      if (resetTargets) {
-        // po každém stavu zruš zvýraznění (čekáme na nové kliknutí)
-        Array.from(tableEl.querySelectorAll('.opponent')).forEach(n => { n.classList.remove('target'); n.onclick = null; });
-        selectedCard = null;
+      if (resetTargets){
+        Array.from(tableEl.querySelectorAll('.opponent')).forEach(n=>{ n.classList.remove('target'); n.onclick=null; });
+        selectedCard=null;
       }
     }
 
@@ -272,62 +292,56 @@
       return o ? o.name : '';
     }
 
-    function isMyTurn(){ return STATE && STATE.turnPlayerId && STATE.turnPlayerId === myId(); }
+    function isMyTurn(){ return STATE && STATE.turnPlayerId && STATE.turnPlayerId===myId(); }
 
     function onPlay(card){
       if (!isMyTurn()){ addLog('⏳ Nyní nejste na tahu.'); return; }
 
-      if (card.type==='BEER' || card.type==='DRAW2' || card.type==='DRAW3'){
-        addLog(`▶️ Hraji ${META[card.type].name}.`);
+      // karty bez cíle – hraj rovnou
+      const noTarget = [ 'WHISKEY','CIGAR','SHOOTOUT','SPRAY','W_SAWED','W_DOUBLE','W_COLT','W_TOMMY','W_WINCH','W_SPRING','VEST' ];
+      if (noTarget.includes(card.type)){
+        addLog(`▶️ Hraji ${META[card.type]?.name||card.type}.`);
         send({ type:'play', cardId: card.id });
         return;
       }
 
-      if (card.type==='SHOT'){
-        selectedCard = card;
-        addLog('🎯 Vyberte cíl pro 🔫 Výstřel.');
-        highlightShotTargets();
-      }
+      // se cílem
+      selectedCard = card;
+      addLog(`🎯 Vyberte cíl pro ${META[card.type]?.name||card.type}.`);
+      highlightTargets();
     }
 
-    function highlightShotTargets(){
+    function highlightTargets(){
       const nodes = Array.from(tableEl.querySelectorAll('.opponent'));
-      nodes.forEach(n => { n.classList.remove('target'); n.onclick = null; });
-      if (!selectedCard || selectedCard.type!=='SHOT') return;
-      for (const n of nodes){
+      nodes.forEach(n=>{ n.classList.remove('target'); n.onclick=null; });
+      if (!selectedCard) return;
+      for(const n of nodes){
         const pid = n.getAttribute('data-player-id');
         const op = STATE.others.find(o=>o.id===pid);
         if (!op || op.dead) continue;
         n.classList.add('target');
-        n.onclick = () => {
-          addLog(`▶️ Výstřel na ${op.name}.`);
+        n.onclick = ()=>{
+          addLog(`▶️ ${META[selectedCard.type]?.name||selectedCard.type} na ${op.name}.`);
           send({ type:'play', cardId: selectedCard.id, targetId: pid });
-          selectedCard = null;
-          nodes.forEach(x => { x.classList.remove('target'); x.onclick = null; });
+          selectedCard=null;
+          nodes.forEach(x=>{ x.classList.remove('target'); x.onclick=null; });
         };
       }
     }
 
-    endTurnBtn.onclick = () => {
-      if (!isMyTurn()){ addLog('⏳ Nyní nejste na tahu.'); return; }
-      send({ type:'endTurn' });
-    };
+    endTurnBtn.onclick = ()=>{ if(!isMyTurn()){ addLog('⏳ Nyní nejste na tahu.'); return; } send({ type:'endTurn' }); };
 
-    /* ---------- reaction overlay ---------- */
-    const ask = document.getElementById('ask');
-    const askTitle = document.getElementById('askTitle');
-    const askBody = document.getElementById('askBody');
-    const askYes = document.getElementById('askYes');
-    const askNo = document.getElementById('askNo');
-
+    /* ---------- Reaction overlay ---------- */
+    const ask=document.getElementById('ask');
+    const askTitle=document.getElementById('askTitle');
+    const askBody=document.getElementById('askBody');
+    const askYes=document.getElementById('askYes');
+    const askNo=document.getElementById('askNo');
     function showAsk(title, body, onYes, onNo){
-      askTitle.textContent = title;
-      askBody.innerHTML = body;
-      ask.classList.add('show');
-      askYes.onclick = onYes;
-      askNo.onclick = onNo;
+      askTitle.textContent=title; askBody.innerHTML=body; ask.classList.add('show');
+      askYes.onclick=onYes; askNo.onclick=onNo;
     }
-    function hideAsk(){ ask.classList.remove('show'); askYes.onclick = null; askNo.onclick = null; }
+    function hideAsk(){ ask.classList.remove('show'); askYes.onclick=null; askNo.onclick=null; }
   </script>
 </body>
 </html>
