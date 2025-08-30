@@ -39,9 +39,15 @@
     .target{outline:2px dashed #9dd1ff;border-radius:12px}
     .log{padding:12px;max-height:260px;overflow:auto}
     .hud{font-size:12px;color:#9fb4cc}
+    /* ===== TIMER BAR ===== */
+    .timerWrap{margin:8px 0;height:8px;background:#192233;border-radius:999px;overflow:hidden;border:1px solid #2b3b54}
+    .timerBar{height:100%;width:100%;background:linear-gradient(90deg,#6ee7ff,#7aa2ff);transition:width .1s linear}
+    .timerBar.red{background:linear-gradient(90deg,#ff8a8a,#ff5b5b)}
+    .timerBar.gold{background:linear-gradient(90deg,#ffe082,#ffc13d)}
     .overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:40;padding:20px}
     .overlay.show{display:flex}
     .ask-box{background:linear-gradient(180deg,#17202c,#0e141c);border:1px solid #2a3b52;border-radius:16px;padding:16px;max-width:520px;width:100%;box-shadow:var(--shadow)}
+    .ask-cta{display:flex;gap:10px;margin-top:10px}
     @media (max-width:930px){.table{grid-template-columns:1fr}.center{grid-template-columns:1fr}}
   </style>
 </head>
@@ -72,6 +78,11 @@
           <b>🕴️ Mafia Stand-off</b> <span class="muted" id="roomTag"></span>
           <div class="hud" id="hud"></div>
           <div class="hud" id="continental"></div>
+          <!-- Global event timer -->
+          <div id="timerArea" style="display:none">
+            <div class="hud" id="timerText"></div>
+            <div class="timerWrap"><div id="timerBar" class="timerBar"></div></div>
+          </div>
         </div>
         <div class="row">
           <button id="endTurn" class="btn">⏭️ Konec tahu</button>
@@ -105,14 +116,42 @@
     </section>
   </div>
 
-  <!-- REACTION MODAL -->
-  <div class="overlay" id="ask">
+  <!-- REACTION MODALS -->
+  <!-- Shot (classic dodge) -->
+  <div class="overlay" id="askShot">
     <div class="ask-box">
-      <h3 id="askTitle" style="margin:0 0 8px">Reakce</h3>
-      <p id="askBody" class="muted" style="margin:0 0 10px"></p>
-      <div class="row">
-        <button id="askYes" class="btn btn-primary">🛡️ Úhyb</button>
-        <button id="askNo" class="btn">Utržit zásah</button>
+      <h3 style="margin:0 0 8px">Reakce na Výstřel</h3>
+      <p class="muted" style="margin:0 0 10px">Zahrát 🛡️ Úhyb nebo přijmout zásah?</p>
+      <div class="timerWrap"><div id="shotTimer" class="timerBar red"></div></div>
+      <div class="ask-cta">
+        <button id="askShotYes" class="btn btn-primary">🛡️ Úhyb</button>
+        <button id="askShotNo" class="btn">Utržit zásah</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mass events (Shootout/Spray) -->
+  <div class="overlay" id="askMass">
+    <div class="ask-box">
+      <h3 id="massTitle" style="margin:0 0 8px">Událost</h3>
+      <p id="massBody" class="muted" style="margin:0 0 10px"></p>
+      <div class="timerWrap"><div id="massTimer" class="timerBar gold"></div></div>
+      <div class="ask-cta">
+        <button id="massYes" class="btn btn-primary">Odhodit požadovanou kartu</button>
+        <button id="massNo" class="btn">Nechat být</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vendetta -->
+  <div class="overlay" id="askVend">
+    <div class="ask-box">
+      <h3 style="margin:0 0 8px">Vendeta – tvoje odpověď</h3>
+      <p class="muted" style="margin:0 0 10px">Odhoď 🔫 Výstřel, nebo přijmi zásah.</p>
+      <div class="timerWrap"><div id="vendTimer" class="timerBar red"></div></div>
+      <div class="ask-cta">
+        <button id="vendYes" class="btn btn-primary">Odhodit 🔫</button>
+        <button id="vendNo" class="btn">Přijmout zásah</button>
       </div>
     </div>
   </div>
@@ -121,7 +160,6 @@
     /* ---------- WS ---------- */
     const ws = new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host);
     const send = (obj)=>{ if(ws.readyState!==1){ addLog('❗ Spojení není připraveno.'); return false; } ws.send(JSON.stringify(obj)); return true; };
-
     ws.addEventListener('message',(ev)=>{
       const msg = JSON.parse(ev.data);
       if (msg.type==='lobby'){ if(msg.youId) window.__myId = msg.youId; updateLobby(msg.lobby); }
@@ -152,56 +190,49 @@
       window.__lobby = lobby;
       lobbyInfo.textContent = lobby ? `Kód lobby: ${lobby.lobbyId}  •  Host: ${short(lobby.hostId)} • Hráčů: ${lobby.players.length}` : '';
       playersDiv.innerHTML = lobby.players.map(p=>`• ${p.name} ${p.id===lobby.hostId?'(host)':''}`).join('<br/>');
-
       const iAmHost = (myId() && lobby && myId()===lobby.hostId);
       startBtn.disabled = !(iAmHost && lobby.players.length>=2);
-
-      if (lobby.started){
-        lobbyPanel.style.display='none';
-        boardPanel.style.display='block';
-        roomTag.textContent = `Lobby ${lobby.lobbyId}`;
-      }
+      if (lobby.started){ lobbyPanel.style.display='none'; boardPanel.style.display='block'; roomTag.textContent = `Lobby ${lobby.lobbyId}`; }
     }
 
     function myId(){ return window.__myId||null; }
     function short(x){ return x ? x.slice(0,4)+'…' : ''; }
 
     /* ---------- BOARD UI ---------- */
-    const logEl = document.getElementById('log');
-    const handEl = document.getElementById('hand');
-    const tableEl = document.getElementById('table');
-    const meHearts = document.getElementById('meHearts');
-    const deckCountEl = document.getElementById('deckCount');
-    const discardCountEl = document.getElementById('discardCount');
-    const turnNameEl = document.getElementById('turnName');
-    const endTurnBtn = document.getElementById('endTurn');
-    const backLobbyBtn = document.getElementById('backLobby');
-    const hud = document.getElementById('hud');
-    const continental = document.getElementById('continental');
+    const logEl=document.getElementById('log');
+    const handEl=document.getElementById('hand');
+    const tableEl=document.getElementById('table');
+    const meHearts=document.getElementById('meHearts');
+    const deckCountEl=document.getElementById('deckCount');
+    const discardCountEl=document.getElementById('discardCount');
+    const turnNameEl=document.getElementById('turnName');
+    const endTurnBtn=document.getElementById('endTurn');
+    const backLobbyBtn=document.getElementById('backLobby');
+    const hud=document.getElementById('hud');
+    const continental=document.getElementById('continental');
+
+    const timerArea=document.getElementById('timerArea');
+    const timerText=document.getElementById('timerText');
+    const timerBar=document.getElementById('timerBar');
 
     backLobbyBtn.onclick = ()=>{ boardPanel.style.display='none'; lobbyPanel.style.display='block'; };
 
-    let STATE=null, selectedCard=null;
+    let STATE=null, selectedCard=null, rafId=null;
 
-    function addLog(msg){ const p=document.createElement('div'); p.textContent = msg; logEl.appendChild(p); logEl.scrollTop=logEl.scrollHeight; }
+    function addLog(msg){ const p=document.createElement('div'); p.textContent=msg; logEl.appendChild(p); logEl.scrollTop=logEl.scrollHeight; }
 
-    const META={
-      // Attacks & reactions
-      SHOT:{emoji:'🔫',name:'Výstřel',desc:'Střel na cíl do dostřelu zbraně. Obránce může 🛡️.'},
+    const META={ SHOT:{emoji:'🔫',name:'Výstřel',desc:'Střel na cíl do dostřelu zbraně. Obránce může 🛡️.'},
       DODGE:{emoji:'🛡️',name:'Úhyb',desc:'Reakce na Výstřel.'},
       KNIFE:{emoji:'🔪',name:'Nůž',desc:'Zraň cíl ve vzdálenosti 1.'},
       MOLOTOV:{emoji:'🍾',name:'Molotov',desc:'Zraň cíl ve vzdálenosti 1.'},
-      SHOOTOUT:{emoji:'🤜🤛',name:'Přestřelka',desc:'Všichni ostatní musí odhodit 🔫 nebo utrží 1.'},
-      SPRAY:{emoji:'🌪️',name:'Tommy Gun Spray',desc:'Všichni ostatní musí odhodit 🛡️ nebo utrží 1.'},
-      VENDETTA:{emoji:'🗡️',name:'Vendeta',desc:'Střídavě odhazujte 🔫; kdo nemá, utrží 1.'},
-      // Heals
+      SHOOTOUT:{emoji:'🤜🤛',name:'Přestřelka',desc:'Do 10s odhoď 🔫, jinak -1.'},
+      SPRAY:{emoji:'🌪️',name:'Tommy Gun Spray',desc:'Do 10s odhoď 🛡️, jinak -1.'},
+      VENDETTA:{emoji:'🗡️',name:'Vendeta',desc:'Střídavě odhazujte 🔫 v 10s oknech.'},
       WHISKEY:{emoji:'🥃',name:'Whiskey',desc:'+1 život.'},
       CIGAR:{emoji:'🚬',name:'Doutník',desc:'+1 život.'},
-      // Control
-      PRISON:{emoji:'🚔',name:'Vězení',desc:'Cíl vynechá kolo, pokud nehodí 🚔 na začátku tahu.'},
-      EXTORTION:{emoji:'💰',name:'Výpalné',desc:'Vem libovolnou kartu z cíle (ruka/výbava).'},
-      RAID:{emoji:'🔥',name:'Razie',desc:'Spal cíli náhodnou kartu (ruka/výbava).'},
-      // Equipment
+      PRISON:{emoji:'🚔',name:'Vězení',desc:'Cíl může vynechat tah.'},
+      EXTORTION:{emoji:'💰',name:'Výpalné',desc:'Vem kartu nebo vybavení.'},
+      RAID:{emoji:'🔥',name:'Razie',desc:'Spal náhodnou kartu cíle.'},
       W_SAWED:{emoji:'🧩',name:'Sawed-off',desc:'Zbraň: dostřel 2.'},
       W_DOUBLE:{emoji:'🧩',name:'Double-barrel',desc:'Zbraň: dostřel 2.'},
       W_COLT:{emoji:'🧩',name:'Colt 1911',desc:'Zbraň: dostřel 3.'},
@@ -212,50 +243,49 @@
     };
 
     function applyState(s){
-      STATE = s;
+      STATE=s;
       if (!window.__myId && s.you) window.__myId = s.you.id;
-
-      deckCountEl.textContent = s.deckCount;
-      discardCountEl.textContent = s.discardCount;
-      turnNameEl.textContent = findName(s.turnPlayerId) || '—';
+      deckCountEl.textContent=s.deckCount; discardCountEl.textContent=s.discardCount;
+      turnNameEl.textContent = findName(s.turnPlayerId)||'—';
       continental.textContent = s.roundNote ? `🃏 Kontinentál: ${s.roundNote}` : '';
 
-      // HUD – ukaž role jen pokud jsou odhalené nebo jsem to já
       const myRole = s.you.role ? `• Moje role: ${s.you.role}` : '';
       hud.textContent = `Na tahu: ${findName(s.turnPlayerId)||'—'} ${isMyTurn()?'(JÁ)':''} ${myRole}`;
 
-      // hearts
-      meHearts.innerHTML = '';
-      for(let i=0;i<s.you.maxHp;i++){
-        const span=document.createElement('span'); span.className='heart';
-        span.textContent = i<s.you.hp ? '❤' : '🤍';
-        meHearts.appendChild(span);
-      }
+      meHearts.innerHTML=''; for(let i=0;i<s.you.maxHp;i++){ const span=document.createElement('span'); span.className='heart'; span.textContent = i<s.you.hp ? '❤' : '🤍'; meHearts.appendChild(span); }
 
-      // hand
-      handEl.innerHTML='';
-      (s.you.hand||[]).forEach(card=>{
-        const m = META[card.type]||{name:card.type,emoji:'🃏',desc:''};
-        const div=document.createElement('div');
-        div.className='card'; div.setAttribute('data-card-id',card.id);
+      handEl.innerHTML=''; (s.you.hand||[]).forEach(card=>{
+        const m=META[card.type]||{name:card.type,emoji:'🃏',desc:''};
+        const div=document.createElement('div'); div.className='card'; div.setAttribute('data-card-id',card.id);
         div.innerHTML=`<div class="ct">${m.name}</div><div class="emoji">${m.emoji}</div><div class="text">${m.desc}</div>`;
-        div.onclick = ()=> onPlay(card);
-        handEl.appendChild(div);
+        div.onclick=()=> onPlay(card); handEl.appendChild(div);
       });
 
-      // table
       renderOpponents(true);
-
-      // pending reaction – Úhyb
-      if (s.pending && s.pending.type==='SHOT' && s.pending.askYouToDodge){
-        showAsk('Úhyb?', 'Byli jste terčem 🔫 Výstřelu. Zahrát 🛡️ Úhyb?', ()=>{
-          send({ type:'reaction', choice:'DODGE' }); hideAsk();
-        }, ()=>{
-          send({ type:'reaction', choice:'TAKE_HIT' }); hideAsk();
-        });
-      } else hideAsk();
-
       endTurnBtn.disabled = !isMyTurn() || !!s.pending;
+
+      // Event timers/overlays
+      stopGlobalTimer();
+      hideAllModals();
+      if (s.pending){
+        if (s.pending.type==='SHOT' && s.pending.askYouToDodge){
+          showShotModal(s);
+        }
+        if (s.pending.type==='SHOOTOUT' || s.pending.type==='SPRAY'){
+          const need = s.pending.need==='SHOT'?'🔫 Výstřel':'🛡️ Úhyb';
+          const txt = s.pending.type==='SHOOTOUT' ? 'Přestřelka' : 'Tommy Gun Spray';
+          showGlobalTimer(`${txt}: do 10s ${need} – jinak -1.`, s.pending.endsAt);
+          if (s.pending.youNeedToReact){
+            showMassModal(txt, `Reaguj: odhoď ${need}, nebo přijmi zásah.`, s.pending.endsAt, s.pending.need);
+          }
+        }
+        if (s.pending.type==='VENDETTA'){
+          showGlobalTimer(`Vendeta: brání se ${findName(s.pending.defenderId)} (10s).`, s.pending.endsAt);
+          if (s.pending.youNeedToReact){
+            showVendettaModal(s.pending.endsAt);
+          }
+        }
+      }
     }
 
     function renderOpponents(resetTargets=false){
@@ -285,63 +315,79 @@
       }
     }
 
-    function findName(id){
-      if (!STATE) return '';
-      if (STATE.you && STATE.you.id===id) return 'Vy';
-      const o = STATE.others.find(x=>x.id===id);
-      return o ? o.name : '';
-    }
-
+    function findName(id){ if(!STATE) return ''; if(STATE.you && STATE.you.id===id) return 'Vy'; const o=STATE.others.find(x=>x.id===id); return o?o.name:''; }
     function isMyTurn(){ return STATE && STATE.turnPlayerId && STATE.turnPlayerId===myId(); }
 
     function onPlay(card){
       if (!isMyTurn()){ addLog('⏳ Nyní nejste na tahu.'); return; }
-
-      // karty bez cíle – hraj rovnou
       const noTarget = [ 'WHISKEY','CIGAR','SHOOTOUT','SPRAY','W_SAWED','W_DOUBLE','W_COLT','W_TOMMY','W_WINCH','W_SPRING','VEST' ];
-      if (noTarget.includes(card.type)){
-        addLog(`▶️ Hraji ${META[card.type]?.name||card.type}.`);
-        send({ type:'play', cardId: card.id });
-        return;
-      }
-
-      // se cílem
-      selectedCard = card;
-      addLog(`🎯 Vyberte cíl pro ${META[card.type]?.name||card.type}.`);
-      highlightTargets();
+      if (noTarget.includes(card.type)){ addLog(`▶️ Hraji ${META[card.type]?.name||card.type}.`); send({ type:'play', cardId: card.id }); return; }
+      selectedCard = card; addLog(`🎯 Vyberte cíl pro ${META[card.type]?.name||card.type}.`); highlightTargets();
     }
-
     function highlightTargets(){
-      const nodes = Array.from(tableEl.querySelectorAll('.opponent'));
-      nodes.forEach(n=>{ n.classList.remove('target'); n.onclick=null; });
+      const nodes=Array.from(tableEl.querySelectorAll('.opponent')); nodes.forEach(n=>{ n.classList.remove('target'); n.onclick=null; });
       if (!selectedCard) return;
       for(const n of nodes){
-        const pid = n.getAttribute('data-player-id');
-        const op = STATE.others.find(o=>o.id===pid);
+        const pid=n.getAttribute('data-player-id');
+        const op=STATE.others.find(o=>o.id===pid);
         if (!op || op.dead) continue;
         n.classList.add('target');
-        n.onclick = ()=>{
-          addLog(`▶️ ${META[selectedCard.type]?.name||selectedCard.type} na ${op.name}.`);
-          send({ type:'play', cardId: selectedCard.id, targetId: pid });
-          selectedCard=null;
-          nodes.forEach(x=>{ x.classList.remove('target'); x.onclick=null; });
-        };
+        n.onclick=()=>{ addLog(`▶️ ${META[selectedCard.type]?.name||selectedCard.type} na ${op.name}.`); send({ type:'play', cardId: selectedCard.id, targetId: pid }); selectedCard=null; nodes.forEach(x=>{ x.classList.remove('target'); x.onclick=null; }); };
       }
     }
-
     endTurnBtn.onclick = ()=>{ if(!isMyTurn()){ addLog('⏳ Nyní nejste na tahu.'); return; } send({ type:'endTurn' }); };
 
-    /* ---------- Reaction overlay ---------- */
-    const ask=document.getElementById('ask');
-    const askTitle=document.getElementById('askTitle');
-    const askBody=document.getElementById('askBody');
-    const askYes=document.getElementById('askYes');
-    const askNo=document.getElementById('askNo');
-    function showAsk(title, body, onYes, onNo){
-      askTitle.textContent=title; askBody.innerHTML=body; ask.classList.add('show');
-      askYes.onclick=onYes; askNo.onclick=onNo;
+    /* ---------- Timer helpers ---------- */
+    function showGlobalTimer(text, endsAtMs){
+      timerArea.style.display='block'; timerText.textContent=text; animateBar(timerBar, endsAtMs);
     }
-    function hideAsk(){ ask.classList.remove('show'); askYes.onclick=null; askNo.onclick=null; }
+    function stopGlobalTimer(){
+      timerArea.style.display='none'; if (rafId) cancelAnimationFrame(rafId); rafId=null; timerBar.style.width='100%';
+    }
+    function animateBar(barEl, endsAt){
+      function step(){
+        const remaining = Math.max(0, endsAt - Date.now());
+        const pct = remaining/10000; barEl.style.width = (pct*100)+'%';
+        if (remaining>0) rafId = requestAnimationFrame(step);
+        else barEl.style.width='0%';
+      }
+      step();
+    }
+
+    /* ---------- Modals ---------- */
+    const askShot=document.getElementById('askShot');
+    const shotYes=document.getElementById('askShotYes');
+    const shotNo=document.getElementById('askShotNo');
+    const shotTimer=document.getElementById('shotTimer');
+
+    const askMass=document.getElementById('askMass');
+    const massTitle=document.getElementById('massTitle');
+    const massBody=document.getElementById('massBody');
+    const massYes=document.getElementById('massYes');
+    const massNo=document.getElementById('massNo');
+    const massTimer=document.getElementById('massTimer');
+
+    const askVend=document.getElementById('askVend');
+    const vendYes=document.getElementById('vendYes');
+    const vendNo=document.getElementById('vendNo');
+    const vendTimer=document.getElementById('vendTimer');
+
+    function hideAllModals(){ askShot.classList.remove('show'); askMass.classList.remove('show'); askVend.classList.remove('show'); }
+    function showShotModal(s){
+      askShot.classList.add('show'); animateBar(shotTimer, Date.now()+10000); // 10s – serverově drží přesně, klient jen animuje
+      shotYes.onclick=()=>{ send({ type:'reaction', choice:'DODGE' }); hideAllModals(); };
+      shotNo.onclick =()=>{ send({ type:'reaction', choice:'TAKE_HIT' }); hideAllModals(); };
+    }
+    function showMassModal(title, body, endsAt, needType){
+      askMass.classList.add('show'); massTitle.textContent=title; massBody.textContent=body; animateBar(massTimer, endsAt);
+      massYes.onclick=()=>{ send({ type:'eventReaction', choice:'DISCARD' }); hideAllModals(); };
+      massNo.onclick =()=>{ send({ type:'eventReaction', choice:'PASS' }); hideAllModals(); };
+    }
+    function showVendettaModal(endsAt){
+      askVend.classList.add('show'); animateBar(vendTimer, endsAt);
+      vendYes.onclick=()=>{ send({ type:'eventReaction', choice:'DISCARD' }); hideAllModals(); };
+      vendNo .onclick=()=>{ send({ type:'eventReaction', choice:'PASS' }); hideAllModals(); };
+    }
   </script>
 </body>
 </html>
