@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: western-shots
+    env: node
+    plan: free        # free web service (po neaktivitě usíná)
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+    healthCheckPath: /
