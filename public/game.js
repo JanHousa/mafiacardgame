@@ -11,8 +11,14 @@ const send = (data) => {
   }
 };
 
+
 // Debug info a základní obsluha
-ws.onopen = () => addLog('✅ Připojeno k serveru.');
+ws.onopen = () => {
+  addLog('✅ Připojeno k serveru.');
+  // po připojení si vyžádáme aktuální lobby+state (když se refreshne stránka uprostřed hry)
+  send({ type: 'get' });
+};
+
 ws.onclose = () => addLog('❌ Spojení ukončeno.');
 ws.onerror = (e) => addLog('❗ Chyba spojení: ' + (e?.message || 'neznámá'));
 
@@ -21,16 +27,35 @@ ws.onmessage = (ev) => {
   try { msg = JSON.parse(ev.data); }
   catch { addLog('❗ Neplatná zpráva ze serveru.'); return; }
 
-  if (msg.type === 'lobby') { /* ... existující ... */ }
-  if (msg.type === 'state') { /* ... existující ... */ }
-  if (msg.type === 'info')  { /* ... existující ... */ }
-  if (msg.type === 'error') { /* ... existující ... */ }
+  switch (msg.type) {
+    case 'lobby':
+      if (msg.youId) window.__myId = msg.youId;
+      if (msg.lobby) updateLobby(msg.lobby);
+      break;
 
-  // 🔔 NOVÉ: animace hodu kostkou pro všechny
-  if (msg.type === 'dice' && msg.symbol) {
-    showDiceRoll(msg.symbol);
+    case 'state':
+      if (msg.state) applyState(msg.state);
+      break;
+
+    case 'info':
+      if (msg.message) addLog(msg.message);
+      break;
+
+    case 'error':
+      if (msg.message) addLog('❗ ' + msg.message);
+      break;
+
+    // 🔔 animace hodu kostkou (pokud server posílá)
+    case 'dice':
+      if (msg.symbol) showDiceRoll(msg.symbol);
+      break;
+
+    default:
+      // ignore unknown
+      break;
   }
 };
+
 
 
 /* ========== Utility ========== */
