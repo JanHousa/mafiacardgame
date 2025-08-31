@@ -219,6 +219,26 @@ function applyState(s) {
   const myRole = s.you?.role ? `• Moje role: ${s.you.role}` : '';
   hud.textContent = `Na tahu: ${findName(s.turnPlayerId) || '—'} ${isMyTurn() ? '(JÁ)' : ''} ${myRole}`;
 
+  // --- vizuální balíčky
+  const deckBadge = document.getElementById('deckCountBadge');
+  const discBadge = document.getElementById('discardCountBadge');
+  const discImg   = document.getElementById('discardTopImg');
+  const discWrap  = document.getElementById('discardPile');
+
+  if (deckBadge) deckBadge.textContent = s.deckCount ?? 0;
+  if (discBadge) discBadge.textContent = s.discardCount ?? 0;
+
+  if (discImg){
+    if (s.discardTop){
+      discImg.src = CARD_IMG[s.discardTop] || FALLBACK_CARD_IMG;
+      discWrap?.classList.remove('empty');
+    } else {
+      discImg.src = FALLBACK_CARD_IMG;
+      discWrap?.classList.add('empty');
+    }
+  }
+
+
 // Moje jméno
 document.getElementById('myName').textContent = s.you?.name || 'Já';
 
