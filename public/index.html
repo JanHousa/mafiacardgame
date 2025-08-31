@@ -4,204 +4,304 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Mafia Stand-off – Realtime</title>
+  <meta name="description" content="Mafia Stand-off: Realtime karetní hra inspirovaná noir mafiánským světem. Hrajte s přáteli v reálném čase.">
   <style>
-    :root{
-  --bg:#0e1116;--panel:#0f141c;--glass:#0d1320cc;--muted:#93a4b8;--text:#ecf2f8;
-  --accent:#5eead4;--accent-2:#7aa2ff;--warn:#ff7b7b;--ok:#7bffbd;
-  --stroke:#2a3b52;--shadow:0 20px 60px rgba(0,0,0,.45);--radius:20px
-}
-    *{box-sizing:border-box} html,body{height:100%}
-    body{margin:0;background:radial-gradient(1200px 800px at 10% -10%,#1a2230 0%,var(--bg) 60%) fixed;color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial}
-    a{color:var(--accent)} #app{max-width:1200px;margin:0 auto;padding:16px 16px 24px}
-    .btn{border:1px solid rgba(255,255,255,.08);background:linear-gradient(180deg,#1f2836,#151b25);color:var(--text);padding:10px 14px;border-radius:12px;cursor:pointer;box-shadow:var(--shadow);transition:all .14s;font-weight:600}
-    .btn:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.18)}
-    .btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
-    .btn-primary{background:linear-gradient(180deg,#2a3344,#18202e);border-color:#3b4a63}
-    .grid{display:grid;gap:14px}
-    .panel{background:linear-gradient(180deg,var(--panel),#0f141b);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .input{background:#0f141b;border:1px solid #2a3b52;border-radius:12px;padding:10px 12px;color:var(--text)}
-    .muted{color:var(--muted)} .title{font-weight:800}
-    .table{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-    .opponent{background:linear-gradient(180deg,var(--panel),#10151c);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);padding:12px;display:flex;flex-direction:column;gap:10px;position:relative;box-shadow:var(--shadow);min-height:132px}
-    .who{display:flex;align-items:center;justify-content:space-between;gap:8px}
-    .role-pill{font-size:12px;padding:4px 8px;border-radius:999px;background:#1f2937;color:#b7c5d8;border:1px solid rgba(255,255,255,.06)}
-    .role-pill.revealed{background:#253044;color:#cfe3ff}
-    .status{display:flex;gap:6px;flex-wrap:wrap}
-    .badge{font-size:12px;padding:3px 8px;border-radius:10px;border:1px solid rgba(255,255,255,.08);color:#d3deea;background:#1e2633}
-    .hearts{display:flex;gap:2px} .heart{font-size:16px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
-    .cards{font-size:13px;color:var(--muted)}
-    .dead .overlay{position:absolute;inset:0;border-radius:var(--radius);background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;font-weight:800;color:#ffb4b4;font-size:22px;letter-spacing:1px}
-    .center{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-    .hand{display:flex;flex-wrap:wrap;gap:10px;min-height:90px}
-    .card{width:140px;min-height:86px;background:linear-gradient(180deg,var(--card-2),var(--card));border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:8px;display:flex;flex-direction:column;gap:6px;cursor:pointer;position:relative;box-shadow:var(--shadow);transition:transform .12s,border-color .12s}
-    .card .ct{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:#c6d7ee;opacity:.9}
-    .card .emoji{font-size:20px}
-    .card .text{font-size:12px;color:#b8c5d7}
-    .card:hover{transform:translateY(-2px);border-color:#7aa2ff77}
-    .card.sel{outline:2px solid var(--accent-2);transform:translateY(-2px)}
-    .target{outline:2px dashed #9dd1ff;border-radius:12px}
-    .log{padding:12px;max-height:260px;overflow:auto}
-    .hud{font-size:12px;color:#9fb4cc}
-    /* ===== TIMER BAR ===== */
-    .timerWrap{margin:8px 0;height:8px;background:#192233;border-radius:999px;overflow:hidden;border:1px solid #2b3b54}
-    .timerBar{height:100%;width:100%;background:linear-gradient(90deg,#6ee7ff,#7aa2ff);transition:width .1s linear}
-    .timerBar.red{background:linear-gradient(90deg,#ff8a8a,#ff5b5b)}
-    .timerBar.gold{background:linear-gradient(90deg,#ffe082,#ffc13d)}
-    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:40;padding:20px}
-    .overlay.show{display:flex}
-    .ask-box{background:linear-gradient(180deg,#17202c,#0e141c);border:1px solid #2a3b52;border-radius:16px;padding:16px;max-width:520px;width:100%;box-shadow:var(--shadow)}
-    .ask-cta{display:flex;gap:10px;margin-top:10px}
-    @media (max-width:930px){.table{grid-template-columns:1fr}.center{grid-template-columns:1fr}}
-    /* === LOBBY – nový vzhled === */
-.lobby-hero{
-  position:relative; overflow:hidden; border-radius:var(--radius);
-  background:radial-gradient(1200px 800px at -10% -20%,#1b2536 0%,var(--panel) 60%);
-  border:1px solid rgba(255,255,255,.06); box-shadow:var(--shadow); padding:0;
-}
-.lobby-art{
-  position:absolute; inset:0; pointer-events:none; opacity:.18; mix-blend:screen;
-}
-.lobby-wrap{ display:grid; grid-template-columns: 1.1fr .9fr; gap:0; }
-.lobby-left{ padding:26px 24px 20px 24px; display:flex; flex-direction:column; gap:14px; backdrop-filter: blur(10px); background: linear-gradient(180deg,transparent, transparent 60%, rgba(255,255,255,.02)); }
-.lobby-right{ padding:22px; border-left:1px solid rgba(255,255,255,.06); background:linear-gradient(180deg, rgba(255,255,255,.02), transparent); }
+    /* =========================
+       🎨 TÉMATICKÉ PROMĚNNÉ
+    ========================= */
+    :root {
+      --bg: #0e1116;
+      --panel: #0f141c;
+      --panel-2:#0b1119;
+      --glass: #0d1320cc;
+      --muted: #93a4b8;
+      --text: #ecf2f8;
+      --accent: #5eead4;
+      --accent-2: #7aa2ff;
+      --warn: #ff7b7b;
+      --ok: #7bffbd;
+      --stroke: #2a3b52;
+      --shadow: 0 20px 60px rgba(0,0,0,.45);
+      --shadow-deep: 0 25px 70px rgba(0,0,0,.55);
+      --radius: 20px;
+      --transition-fast: 0.15s ease;
+      --transition-slow: 0.35s ease;
+    }
 
-.lobby-title{ display:flex; align-items:center; gap:10px; }
-.logo-chip{
-  width:42px;height:42px;border-radius:14px; display:grid; place-items:center;
-  background:linear-gradient(180deg,#1f2836,#121824); border:1px solid rgba(255,255,255,.12);
-  box-shadow:0 6px 16px rgba(0,0,0,.35);
-}
-.brand{ font-size:22px; font-weight:900; letter-spacing:.3px; }
-.sub{ color:var(--muted); }
+    /* =========================
+       🖥️ RESET A TYPOGRAFIE
+    ========================= */
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(1200px 800px at 10% -10%, #1a2230 0%, var(--bg) 60%) fixed,
+        var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.5;
+      font-size: 15px;
+    }
+    a { color: var(--accent); text-decoration: none; transition: color var(--transition-fast); }
+    a:hover { color: var(--accent-2); }
 
-.lobby-actions{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-.glass{
-  background:linear-gradient(180deg,var(--glass), #0b111b77);
-  border:1px solid rgba(255,255,255,.12); border-radius:18px; padding:14px;
-}
-.field{ display:flex; gap:10px; align-items:center; }
-.input.big{ padding:14px 14px; border-radius:14px; font-weight:600; letter-spacing:.6px; text-transform:uppercase }
-.btn.pill{ border-radius:999px; padding:12px 16px; font-weight:800 }
+    /* =========================
+       📦 LAYOUT
+    ========================= */
+    #app { max-width: 1200px; margin: 0 auto; padding: 16px 16px 24px; display: grid; gap: 14px; }
+    .panel {
+      background: linear-gradient(180deg, var(--panel), #0f141b);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      transition: background var(--transition-slow), transform var(--transition-fast);
+    }
+    .panel:hover { transform: translateY(-1px); }
 
-.lobby-code{
-  display:inline-flex; align-items:center; gap:8px; font-weight:800; letter-spacing:1.4px;
-  background:linear-gradient(180deg,#1b2331,#111824); padding:8px 12px; border-radius:999px;
-  border:1px solid rgba(255,255,255,.12);
-}
-.lobby-meta{ display:flex; gap:12px; flex-wrap:wrap; color:#a9bad0; font-size:13px }
+    /* =========================
+       🔘 BUTTONS
+    ========================= */
+    .btn {
+      border: 1px solid rgba(255,255,255,.08);
+      background: linear-gradient(180deg, #1f2836, #151b25);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      font-weight: 600;
+      transition: all var(--transition-fast);
+      user-select: none;
+    }
+    .btn:hover:not(:disabled) { transform: translateY(-1px); border-color: rgba(255,255,255,.18); }
+    .btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+    .btn-primary { background: linear-gradient(180deg, #2a3344, #18202e); border-color: #3b4a63; }
+    .btn-success { background: linear-gradient(180deg, #1f3a2e, #10261f); border-color: #1b6b53; }
+    .btn-secondary { background: linear-gradient(180deg, #1f2836, #151b25); }
+    .btn.pill { border-radius: 999px; padding: 12px 16px; font-weight: 800 }
 
-.players-card .list{ margin-top:6px; line-height:1.6; }
-.players-card .dot{ width:8px;height:8px;border-radius:50%; background:#7aa2ff; display:inline-block; margin-right:8px; }
+    /* =========================
+       🖋️ FORMULÁŘE
+    ========================= */
+    .input {
+      background: #0f141b;
+      border: 1px solid var(--stroke);
+      border-radius: 12px;
+      padding: 10px 12px;
+      color: var(--text);
+      transition: border var(--transition-fast);
+    }
+    .input:focus { outline: none; border-color: var(--accent); }
+    .input.big { padding: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
 
-.cta-row{ display:flex; gap:10px; flex-wrap:wrap; }
-.btn.primary{ background:linear-gradient(180deg,#2a3344,#18202e); border-color:#3b4a63 }
-.btn.secondary{ background:linear-gradient(180deg,#1f2836,#151b25) }
-.btn.success{ background:linear-gradient(180deg,#1f3a2e,#10261f); border-color:#1b6b53 }
+    /* =========================
+       👥 OSTATNÍ UI PRVKY
+    ========================= */
+    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .muted { color: var(--muted); }
+    .title { font-weight: 800; letter-spacing: .3px; }
+    .hint { color: #a7b9cf; font-size: 12px; }
 
-.hint{ color:#a7b9cf; font-size:12px; }
-@media (max-width:980px){ .lobby-wrap{ grid-template-columns:1fr } .lobby-right{ border-left:none; border-top:1px solid rgba(255,255,255,.06) } }
+    /* =========================
+       🎴 HERNÍ STŮL
+    ========================= */
+    .table { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .opponent {
+      background: linear-gradient(180deg, var(--panel), #10151c);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: var(--radius);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+      box-shadow: var(--shadow);
+      min-height: 132px;
+      transition: border var(--transition-fast), transform var(--transition-fast);
+    }
+    .opponent:hover { border-color: var(--accent-2); transform: translateY(-2px); }
+    .who { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 700; }
+    .role-pill {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #1f2937;
+      color: #b7c5d8;
+      border: 1px solid rgba(255,255,255,.06);
+    }
+    .role-pill.revealed { background: #253044; color: #cfe3ff; }
+    .status { display: flex; gap: 6px; flex-wrap: wrap; }
+    .badge {
+      font-size: 12px; padding: 3px 8px;
+      border-radius: 10px; border: 1px solid rgba(255,255,255,.08);
+      color: #d3deea; background: #1e2633;
+    }
+    .hearts { display: flex; gap: 2px; }
+    .heart { font-size: 16px; filter: drop-shadow(0 2px 6px rgba(0,0,0,.35)); }
+    .cards { font-size: 13px; color: var(--muted); }
 
-/* drobnosti, ať to sedne na zbytek */
-.input{ background:#0f141b; border:1px solid var(--stroke); color:var(--text) }
-.btn{ border:1px solid rgba(255,255,255,.12) }
+    /* =========================
+       🃏 KARTY
+    ========================= */
+    .hand { display: flex; flex-wrap: wrap; gap: 10px; min-height: 90px; }
+    .card {
+      width: 140px; min-height: 86px;
+      background: linear-gradient(120deg, #ffffff09 0%, #ffffff00 40%), linear-gradient(180deg, #19222e, #11161f);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 8px;
+      display: flex; flex-direction: column; gap: 6px;
+      cursor: pointer; position: relative;
+      box-shadow: var(--shadow);
+      transition: transform var(--transition-fast), border var(--transition-fast);
+    }
+    .card:hover { transform: translateY(-2px); border-color: var(--accent-2); }
+    .card.sel { outline: 2px solid var(--accent-2); }
+    .card .ct { font-size: 12px; text-transform: uppercase; letter-spacing: .6px; color: #c6d7ee; }
+    .card .emoji { font-size: 20px; }
+    .card .text { font-size: 12px; color: #b8c5d7; }
+    .target { outline: 2px dashed var(--accent-2); border-radius: 12px; }
+
+    /* =========================
+       📜 LOG A HUD
+    ========================= */
+    .log { padding: 12px; max-height: 260px; overflow-y: auto; font-size: 13px; background: #0a1018; border:1px solid #1c2940; border-radius:12px }
+    .log div { margin-bottom: 2px; animation: fadeIn .3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+
+    /* =========================
+       ⏳ TIMER BAR
+    ========================= */
+    .timerWrap { margin: 8px 0; height: 8px; background: #192233; border-radius: 999px; overflow: hidden; border: 1px solid #2b3b54; }
+    .timerBar { height: 100%; width: 100%; background: linear-gradient(90deg, #6ee7ff, #7aa2ff); transition: width .1s linear; }
+    .timerBar.red { background: linear-gradient(90deg, #ff8a8a, #ff5b5b); }
+    .timerBar.gold { background: linear-gradient(90deg, #ffe082, #ffc13d); }
+
+    /* =========================
+       🔲 MODÁLNÍ OVERLAYE
+    ========================= */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.55);
+      display: none; align-items: center; justify-content: center;
+      z-index: 40; padding: 20px;
+    }
+    .overlay.show { display: flex; animation: fadeIn .4s ease; }
+    .ask-box {
+      background: linear-gradient(180deg, #17202c, #0e141c);
+      border: 1px solid #2a3b52;
+      border-radius: 16px;
+      padding: 16px;
+      max-width: 520px; width: 100%;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    /* =========================
+       🧭 LOBBY VZHLED (DŮLEŽITÉ!)
+    ========================= */
+    .lobby-hero{ padding:0; overflow:hidden; border-radius:var(--radius); position:relative }
+    .lobby-banner{ width:100%; padding-top:30%; position:relative; overflow:hidden; border-bottom:1px solid rgba(255,255,255,.06) }
+    .lobby-banner img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:brightness(.99) contrast(1) }
+    .lobby-wrap{ display:grid; grid-template-columns:1.1fr .9fr; gap:0 }
+    .lobby-left{ padding:24px; display:flex; flex-direction:column; gap:14px }
+    .lobby-right{ padding:22px; border-left:1px solid rgba(255,255,255,.06) }
+    .lobby-title{ display:flex; gap:10px; align-items:center }
+    .logo-img{ width:54px; height:54px; border-radius:12px; object-fit:contain; background:#0c1420; padding:4px; border:1px solid rgba(255,255,255,.08); box-shadow:0 4px 10px rgba(0,0,0,.5) }
+    .glass{ background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)), linear-gradient(180deg, var(--panel), var(--panel-2)); border:1px solid rgba(255,255,255,.12); border-radius:18px; padding:14px }
+    .lobby-code{ display:inline-flex; align-items:center; gap:8px; font-weight:800; letter-spacing:1.4px; background:linear-gradient(180deg,#1b2331,#111824); padding:8px 12px; border-radius:999px; border:1px solid rgba(255,255,255,.12); }
+    .players-card .list{ margin-top:6px; line-height:1.6; }
+    .players-card .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:8px; background:#7aa2ff }
+    .cta-row{ display:flex; gap:10px; flex-wrap:wrap; }
+
+    /* =========================
+       📱 RESPONSIVITA
+    ========================= */
+    @media (max-width:980px){
+      .lobby-wrap{ grid-template-columns:1fr }
+      .lobby-right{ border-left:none; border-top:1px solid rgba(255,255,255,.06) }
+    }
+    @media (max-width:930px) {
+      .table { grid-template-columns: 1fr; }
+      .center { grid-template-columns: 1fr; }
+    }
+    @media (max-width:520px) { .card { width: 100%; } }
   </style>
+  <!-- DŮLEŽITÉ: defer zajistí, že DOM existuje dřív, než game.js běží -->
+  <script src="game.js" defer></script>
 </head>
 <body>
   <div id="app" class="grid">
+    
     <!-- LOBBY -->
-    <section class="panel lobby-hero" id="lobbyPanel">
-  <!-- ilustrační „obrázek“ – inline SVG (bez assetů) -->
-  <svg class="lobby-art" viewBox="0 0 1200 400" preserveAspectRatio="none" aria-hidden="true">
-    <defs>
-      <linearGradient id="g1" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stop-color="#7aa2ff"/>
-        <stop offset="1" stop-color="#5eead4"/>
-      </linearGradient>
-    </defs>
-    <!-- siluety „mafie“ -->
-    <g fill="url(#g1)" opacity=".55">
-      <path d="M90 360c0-55 40-100 90-100s90 45 90 100H90z"/>
-      <rect x="150" y="160" width="60" height="100" rx="8"/>
-      <circle cx="180" cy="140" r="28"/>
-      <path d="M310 360c0-65 45-120 100-120s100 55 100 120H310z"/>
-      <rect x="380" y="150" width="70" height="115" rx="10"/>
-      <circle cx="415" cy="125" r="30"/>
-      <path d="M690 360c0-75 55-140 120-140s120 65 120 140H690z"/>
-      <rect x="770" y="140" width="80" height="120" rx="12"/>
-      <circle cx="810" cy="112" r="34"/>
-    </g>
-    <!-- diagonální linky -->
-    <g stroke="url(#g1)" stroke-width="1" opacity=".25">
-      <path d="M0 320 L1200 80"/>
-      <path d="M0 360 L1200 120"/>
-      <path d="M0 280 L1200 40"/>
-    </g>
-  </svg>
-
-  <div class="lobby-wrap">
-    <!-- LEFT: brand + create -->
-    <div class="lobby-left">
-      <div class="lobby-title">
-        <div class="logo-chip">🕴️</div>
-        <div>
-          <div class="brand">Mafia Stand-off</div>
-          <div class="sub">Real-time party card game • až 7 hráčů</div>
-        </div>
+    <section class="panel lobby-hero" id="lobbyPanel" aria-label="Lobby">
+      <!-- HERO BANNER -->
+      <div class="lobby-banner" aria-hidden="true">
+        <img src="img/banner.jpg" alt="Mafia Stand-off Banner">
       </div>
 
-      <div class="glass">
-        <div class="sub" style="margin-bottom:8px">Vytvořit novou hru</div>
-        <div class="field">
-          <input id="name" class="input big" placeholder="Vaše jméno" />
-          <button id="createBtn" class="btn pill primary">+ Vytvořit lobby</button>
+      <div class="lobby-wrap">
+        <!-- LEFT -->
+        <div class="lobby-left">
+          <div class="lobby-title">
+            <img src="img/logo.png" alt="Mafia Stand-off Logo" class="logo-img">
+            <div>
+              <div class="brand">Mafia Stand-off</div>
+              <div class="muted">Real-time party card game • až 7 hráčů</div>
+            </div>
+          </div>
+
+          <div class="glass">
+            <div class="muted" style="margin-bottom:8px">Vytvořit novou hru</div>
+            <div class="row">
+              <input id="name" class="input big" placeholder="Vaše jméno" />
+              <button id="createBtn" class="btn pill btn-primary">+ Vytvořit lobby</button>
+            </div>
+            <div class="hint" style="margin-top:8px">Tip: jméno můžeš kdykoli změnit před připojením.</div>
+          </div>
+
+          <div class="glass players-card">
+            <div class="muted" style="margin-bottom:6px">Hráči v lobby</div>
+            <div id="players" class="list muted"><span class="hint">Zatím nikdo…</span></div>
+            <div class="cta-row" style="margin-top:10px">
+              <button id="readyBtn" class="btn pill btn-secondary">Jsem připraven</button>
+              <button id="startBtn" class="btn pill btn-success" disabled>▶ Start hry (host)</button>
+            </div>
+            <div id="lobbyInfo" class="hint" style="margin-top:8px"></div>
+          </div>
+
+          <div class="hint">Verze alfa 0.1.0</div>
         </div>
-        <div class="lobby-meta" style="margin-top:10px">
-          <span>⚡ Peer-to-peer pocit • 🧊 WS realtime • 🔒 role skryté</span>
+
+        <!-- RIGHT -->
+        <div class="lobby-right">
+          <div class="glass">
+            <div class="muted" style="margin-bottom:8px">Připojit se ke hře</div>
+            <div class="row">
+              <input id="joinId" class="input big" placeholder="Kód lobby (např. ABCD)" style="width:100%;max-width:260px" />
+              <button id="joinBtn" class="btn pill">Připojit</button>
+            </div>
+            <div style="margin-top:12px">
+              <span class="lobby-code">KÓD: <span id="codeMirror">—</span></span>
+            </div>
+            <div class="hint" style="margin-top:6px">Kód sdílí host poté, co lobby vytvoří.</div>
+          </div>
+
+          <div class="glass" style="margin-top:12px">
+            <div class="muted">Jak to funguje?</div>
+            <ul class="muted" style="margin:6px 0 0 18px; line-height:1.6">
+              <li>Host klikne „Vytvořit lobby“ – objeví se kód.</li>
+              <li>Ostatní zadají kód a kliknou „Připojit“.</li>
+              <li>Jakmile je vás min. 2 a všichni jsou „Připraveni“, host může „Start hry“.</li>
+            </ul>
+          </div>
         </div>
       </div>
-
-      <div class="glass players-card">
-        <div class="sub" style="margin-bottom:6px">Hráči v lobby</div>
-        <div id="players" class="list muted"><span class="hint">Zatím nikdo…</span></div>
-        <div class="cta-row" style="margin-top:10px">
-          <button id="readyBtn" class="btn pill secondary">Jsem připraven</button>
-          <button id="startBtn" class="btn pill success" disabled>▶ Start hry (host)</button>
-        </div>
-        <div id="lobbyInfo" class="hint" style="margin-top:8px"></div>
-      </div>
-
-      <div class="hint">Tip: sdílej kód lobby, ať se ostatní rychle připojí.</div>
-    </div>
-
-    <!-- RIGHT: join -->
-    <div class="lobby-right">
-      <div class="glass">
-        <div class="sub" style="margin-bottom:8px">Připojit se ke hře</div>
-        <div class="field">
-          <input id="joinId" class="input big" placeholder="Kód lobby (např. ABCD)" style="width:100%;max-width:260px" />
-          <button id="joinBtn" class="btn pill">Připojit</button>
-        </div>
-        <div style="margin-top:12px">
-          <span class="lobby-code">KÓD: <span id="codeMirror">—</span></span>
-        </div>
-      </div>
-
-      <div class="glass" style="margin-top:12px">
-        <div class="sub">Jak to funguje?</div>
-        <ul class="muted" style="margin:6px 0 0 18px; line-height:1.6">
-          <li>Host klikne „Vytvořit lobby“ – objeví se kód.</li>
-          <li>Ostatní zadají kód a kliknou „Připojit“.</li>
-          <li>Jakmile je vás min. 2, host může „Start hry“.</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
-
+    </section>
 
     <!-- BOARD -->
-    <section class="panel" id="boardPanel" style="display:none">
+    <section class="panel" id="boardPanel" style="display:none" aria-label="Herní stůl">
       <div class="row" style="justify-content:space-between">
         <div>
           <b>🕴️ Mafia Stand-off</b> <span class="muted" id="roomTag"></span>
@@ -210,7 +310,7 @@
           <!-- Global event timer -->
           <div id="timerArea" style="display:none">
             <div class="hud" id="timerText"></div>
-            <div class="timerWrap"><div id="timerBar" class="timerBar"></div></div>
+            <div class="timerWrap" aria-hidden="true"><div id="timerBar" class="timerBar"></div></div>
           </div>
         </div>
         <div class="row">
@@ -219,17 +319,17 @@
         </div>
       </div>
 
-      <div class="center" style="margin-top:10px">
-        <div class="panel">
+      <div class="row" style="margin-top:10px;align-items:flex-start">
+        <div class="panel" style="flex:1">
           <div><b>Na tahu:</b> <span id="turnName">—</span></div>
           <div class="row" style="margin-top:8px">
             <div>Balíček: <b id="deckCount">0</b></div>
             <div>Odhaz.: <b id="discardCount">0</b></div>
           </div>
-          <div class="log" id="log"></div>
+          <div class="log" id="log" aria-live="polite"></div>
         </div>
 
-        <div class="panel">
+        <div class="panel" style="flex:2">
           <div class="title">Stůl</div>
           <div class="table" id="table"></div>
         </div>
@@ -247,12 +347,12 @@
 
   <!-- REACTION MODALS -->
   <!-- Shot (classic dodge) -->
-  <div class="overlay" id="askShot">
+  <div class="overlay" id="askShot" role="dialog" aria-modal="true" aria-labelledby="shotTitle">
     <div class="ask-box">
-      <h3 style="margin:0 0 8px">Reakce na Výstřel</h3>
+      <h3 id="shotTitle" style="margin:0 0 8px">Reakce na Výstřel</h3>
       <p class="muted" style="margin:0 0 10px">Zahrát 🛡️ Úhyb nebo přijmout zásah?</p>
-      <div class="timerWrap"><div id="shotTimer" class="timerBar red"></div></div>
-      <div class="ask-cta">
+      <div class="timerWrap" aria-hidden="true"><div id="shotTimer" class="timerBar red"></div></div>
+      <div class="row" style="margin-top:8px">
         <button id="askShotYes" class="btn btn-primary">🛡️ Úhyb</button>
         <button id="askShotNo" class="btn">Utržit zásah</button>
       </div>
@@ -260,12 +360,12 @@
   </div>
 
   <!-- Mass events (Shootout/Spray) -->
-  <div class="overlay" id="askMass">
+  <div class="overlay" id="askMass" role="dialog" aria-modal="true" aria-labelledby="massTitle" aria-describedby="massBody">
     <div class="ask-box">
       <h3 id="massTitle" style="margin:0 0 8px">Událost</h3>
       <p id="massBody" class="muted" style="margin:0 0 10px"></p>
-      <div class="timerWrap"><div id="massTimer" class="timerBar gold"></div></div>
-      <div class="ask-cta">
+      <div class="timerWrap" aria-hidden="true"><div id="massTimer" class="timerBar gold"></div></div>
+      <div class="row" style="margin-top:8px">
         <button id="massYes" class="btn btn-primary">Odhodit požadovanou kartu</button>
         <button id="massNo" class="btn">Nechat být</button>
       </div>
@@ -273,282 +373,16 @@
   </div>
 
   <!-- Vendetta -->
-  <div class="overlay" id="askVend">
+  <div class="overlay" id="askVend" role="dialog" aria-modal="true" aria-labelledby="vendTitle">
     <div class="ask-box">
-      <h3 style="margin:0 0 8px">Vendeta – tvoje odpověď</h3>
+      <h3 id="vendTitle" style="margin:0 0 8px">Vendeta – tvoje odpověď</h3>
       <p class="muted" style="margin:0 0 10px">Odhoď 🔫 Výstřel, nebo přijmi zásah.</p>
-      <div class="timerWrap"><div id="vendTimer" class="timerBar red"></div></div>
-      <div class="ask-cta">
+      <div class="timerWrap" aria-hidden="true"><div id="vendTimer" class="timerBar red"></div></div>
+      <div class="row" style="margin-top:8px">
         <button id="vendYes" class="btn btn-primary">Odhodit 🔫</button>
         <button id="vendNo" class="btn">Přijmout zásah</button>
       </div>
     </div>
   </div>
-
-  <script>
-    /* ---------- WS ---------- */
-    const ws = new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host);
-    const send = (obj)=>{ if(ws.readyState!==1){ addLog('❗ Spojení není připraveno.'); return false; } ws.send(JSON.stringify(obj)); return true; };
-    ws.addEventListener('message',(ev)=>{
-      const msg = JSON.parse(ev.data);
-      if (msg.type==='lobby'){ if(msg.youId) window.__myId = msg.youId; updateLobby(msg.lobby); }
-      if (msg.type==='info'){ addLog(msg.message); }
-      if (msg.type==='error'){ addLog('❗ '+msg.message); }
-      if (msg.type==='state'){ applyState(msg.state); }
-    });
-
-    /* ---------- LOBBY UI ---------- */
-    const lobbyPanel = document.getElementById('lobbyPanel');
-    const boardPanel = document.getElementById('boardPanel');
-    const nameInp = document.getElementById('name');
-    const createBtn = document.getElementById('createBtn');
-    const joinIdInp = document.getElementById('joinId');
-    const joinBtn = document.getElementById('joinBtn');
-    const lobbyInfo = document.getElementById('lobbyInfo');
-    const playersDiv = document.getElementById('players');
-    const readyBtn = document.getElementById('readyBtn');
-    const startBtn = document.getElementById('startBtn');
-    const roomTag = document.getElementById('roomTag');
-
-    createBtn.onclick = ()=> send({ type:'create', name: nameInp.value });
-    joinBtn.onclick   = ()=> send({ type:'join', lobbyId: joinIdInp.value, name: nameInp.value });
-    readyBtn.onclick = () => {
-      const me = (window.__lobby?.players||[]).find(p => p.id === myId());
-      const next = !me?.ready;
-      send({ type:'ready', ready: next });
-    };
-    startBtn.onclick  = ()=> send({ type:'start' });
-
-    function updateLobby(lobby){
-      window.__lobby = lobby;
-
-      const infoEl = document.getElementById('lobbyInfo');
-      const codeMirror = document.getElementById('codeMirror');
-      infoEl.textContent = lobby ? `Kód lobby: ${lobby.lobbyId}  •  Host: ${short(lobby.hostId)} • Hráčů: ${lobby.players.length}` : '';
-      if (codeMirror) codeMirror.textContent = lobby ? lobby.lobbyId : '—';
-
-      // seznam hráčů + indikátor připravenosti
-      const playersDiv = document.getElementById('players');
-      playersDiv.innerHTML = lobby.players.length
-        ? lobby.players.map(p =>
-            `<span class="dot" style="background:${p.ready?'#3be3a5':'#64748b'}"></span>${p.name} ${p.id===lobby.hostId?'(host)':''}`
-          ).join('<br/>')
-        : '<span class="hint">Zatím nikdo…</span>';
-
-      // toggle textu tlačítka Ready
-      const me = lobby.players.find(p => p.id === myId());
-      const readyBtn = document.getElementById('readyBtn');
-      if (me) readyBtn.textContent = me.ready ? 'Zrušit připravenost' : 'Jsem připraven';
-
-      // start je možný jen když všichni ready a min. 2 hráči
-      const startBtn = document.getElementById('startBtn');
-      const iAmHost = (myId() && lobby && myId()===lobby.hostId);
-      const enough = lobby.players.length >= 2;
-      const allReady = lobby.players.every(p => p.ready === true);
-      startBtn.disabled = !(iAmHost && enough && allReady);
-
-      if (lobby.started){
-        document.getElementById('lobbyPanel').style.display='none';
-        document.getElementById('boardPanel').style.display='block';
-        document.getElementById('roomTag').textContent = `Lobby ${lobby.lobbyId}`;
-      }
-    }
-
-
-
-    function myId(){ return window.__myId||null; }
-    function short(x){ return x ? x.slice(0,4)+'…' : ''; }
-
-    /* ---------- BOARD UI ---------- */
-    const logEl=document.getElementById('log');
-    const handEl=document.getElementById('hand');
-    const tableEl=document.getElementById('table');
-    const meHearts=document.getElementById('meHearts');
-    const deckCountEl=document.getElementById('deckCount');
-    const discardCountEl=document.getElementById('discardCount');
-    const turnNameEl=document.getElementById('turnName');
-    const endTurnBtn=document.getElementById('endTurn');
-    const backLobbyBtn=document.getElementById('backLobby');
-    const hud=document.getElementById('hud');
-    const continental=document.getElementById('continental');
-
-    const timerArea=document.getElementById('timerArea');
-    const timerText=document.getElementById('timerText');
-    const timerBar=document.getElementById('timerBar');
-
-    backLobbyBtn.onclick = ()=>{ boardPanel.style.display='none'; lobbyPanel.style.display='block'; };
-
-    let STATE=null, selectedCard=null, rafId=null;
-
-    function addLog(msg){ const p=document.createElement('div'); p.textContent=msg; logEl.appendChild(p); logEl.scrollTop=logEl.scrollHeight; }
-
-    const META={ SHOT:{emoji:'🔫',name:'Výstřel',desc:'Střel na cíl do dostřelu zbraně. Obránce může 🛡️.'},
-      DODGE:{emoji:'🛡️',name:'Úhyb',desc:'Reakce na Výstřel.'},
-      KNIFE:{emoji:'🔪',name:'Nůž',desc:'Zraň cíl ve vzdálenosti 1.'},
-      MOLOTOV:{emoji:'🍾',name:'Molotov',desc:'Zraň cíl ve vzdálenosti 1.'},
-      SHOOTOUT:{emoji:'🤜🤛',name:'Přestřelka',desc:'Do 10s odhoď 🔫, jinak -1.'},
-      SPRAY:{emoji:'🌪️',name:'Tommy Gun Spray',desc:'Do 10s odhoď 🛡️, jinak -1.'},
-      VENDETTA:{emoji:'🗡️',name:'Vendeta',desc:'Střídavě odhazujte 🔫 v 10s oknech.'},
-      WHISKEY:{emoji:'🥃',name:'Whiskey',desc:'+1 život.'},
-      CIGAR:{emoji:'🚬',name:'Doutník',desc:'+1 život.'},
-      PRISON:{emoji:'🚔',name:'Vězení',desc:'Cíl může vynechat tah.'},
-      EXTORTION:{emoji:'💰',name:'Výpalné',desc:'Vem kartu nebo vybavení.'},
-      RAID:{emoji:'🔥',name:'Razie',desc:'Spal náhodnou kartu cíle.'},
-      W_SAWED:{emoji:'🧩',name:'Sawed-off',desc:'Zbraň: dostřel 2.'},
-      W_DOUBLE:{emoji:'🧩',name:'Double-barrel',desc:'Zbraň: dostřel 2.'},
-      W_COLT:{emoji:'🧩',name:'Colt 1911',desc:'Zbraň: dostřel 3.'},
-      W_TOMMY:{emoji:'🧩',name:'Tommy Gun',desc:'Zbraň: dostřel 3, neomezené 🔫.'},
-      W_WINCH:{emoji:'🧩',name:'Winchester',desc:'Zbraň: dostřel 4.'},
-      W_SPRING:{emoji:'🧩',name:'Springfield',desc:'Zbraň: dostřel 5.'},
-      VEST:{emoji:'🦺',name:'Neprůstřelná vesta',desc:'Při 🔫 hoď kostkou; na ❤️ ignoruješ zásah.'},
-    };
-
-    function applyState(s){
-      STATE=s;
-      if (!window.__myId && s.you) window.__myId = s.you.id;
-      deckCountEl.textContent=s.deckCount; discardCountEl.textContent=s.discardCount;
-      turnNameEl.textContent = findName(s.turnPlayerId)||'—';
-      continental.textContent = s.roundNote ? `🃏 Kontinentál: ${s.roundNote}` : '';
-
-      const myRole = s.you.role ? `• Moje role: ${s.you.role}` : '';
-      hud.textContent = `Na tahu: ${findName(s.turnPlayerId)||'—'} ${isMyTurn()?'(JÁ)':''} ${myRole}`;
-
-      meHearts.innerHTML=''; for(let i=0;i<s.you.maxHp;i++){ const span=document.createElement('span'); span.className='heart'; span.textContent = i<s.you.hp ? '❤' : '🤍'; meHearts.appendChild(span); }
-
-      handEl.innerHTML=''; (s.you.hand||[]).forEach(card=>{
-        const m=META[card.type]||{name:card.type,emoji:'🃏',desc:''};
-        const div=document.createElement('div'); div.className='card'; div.setAttribute('data-card-id',card.id);
-        div.innerHTML=`<div class="ct">${m.name}</div><div class="emoji">${m.emoji}</div><div class="text">${m.desc}</div>`;
-        div.onclick=()=> onPlay(card); handEl.appendChild(div);
-      });
-
-      renderOpponents(true);
-      endTurnBtn.disabled = !isMyTurn() || !!s.pending;
-
-      // Event timers/overlays
-      stopGlobalTimer();
-      hideAllModals();
-      if (s.pending){
-        if (s.pending.type==='SHOT' && s.pending.askYouToDodge){
-          showShotModal(s);
-        }
-        if (s.pending.type==='SHOOTOUT' || s.pending.type==='SPRAY'){
-          const need = s.pending.need==='SHOT'?'🔫 Výstřel':'🛡️ Úhyb';
-          const txt = s.pending.type==='SHOOTOUT' ? 'Přestřelka' : 'Tommy Gun Spray';
-          showGlobalTimer(`${txt}: do 10s ${need} – jinak -1.`, s.pending.endsAt);
-          if (s.pending.youNeedToReact){
-            showMassModal(txt, `Reaguj: odhoď ${need}, nebo přijmi zásah.`, s.pending.endsAt, s.pending.need);
-          }
-        }
-        if (s.pending.type==='VENDETTA'){
-          showGlobalTimer(`Vendeta: brání se ${findName(s.pending.defenderId)} (10s).`, s.pending.endsAt);
-          if (s.pending.youNeedToReact){
-            showVendettaModal(s.pending.endsAt);
-          }
-        }
-      }
-    }
-
-    function renderOpponents(resetTargets=false){
-      tableEl.innerHTML='';
-      (STATE?.others||[]).forEach(op=>{
-        const wrap=document.createElement('div');
-        wrap.className='opponent'+(op.dead?' dead':'');
-        wrap.setAttribute('data-player-id',op.id);
-        const roleHTML = `<div class="role-pill ${op.roleRevealed?'revealed':''}">${op.roleRevealed ? (op.role||'—') : 'Neznámá'}</div>`;
-        const statusHTML = `
-          <div class="status">
-            ${op.inPrison?'<span class="badge">🚔 Ve vězení</span>':''}
-            ${op.weapon?`<span class="badge">🔧 ${op.weapon.name}</span>`:''}
-            ${op.vest?'<span class="badge">🦺 Vesta</span>':''}
-          </div>`;
-        wrap.innerHTML = `
-          <div class="who"><div>${op.name}</div>${roleHTML}</div>
-          ${statusHTML}
-          <div class="hearts">${'❤'.repeat(op.hp)}${'🤍'.repeat(Math.max(0, op.maxHp-op.hp))}</div>
-          <div class="cards">Karty v ruce: ${op.handCount}</div>
-        `;
-        tableEl.appendChild(wrap);
-      });
-      if (resetTargets){
-        Array.from(tableEl.querySelectorAll('.opponent')).forEach(n=>{ n.classList.remove('target'); n.onclick=null; });
-        selectedCard=null;
-      }
-    }
-
-    function findName(id){ if(!STATE) return ''; if(STATE.you && STATE.you.id===id) return 'Vy'; const o=STATE.others.find(x=>x.id===id); return o?o.name:''; }
-    function isMyTurn(){ return STATE && STATE.turnPlayerId && STATE.turnPlayerId===myId(); }
-
-    function onPlay(card){
-      if (!isMyTurn()){ addLog('⏳ Nyní nejste na tahu.'); return; }
-      const noTarget = [ 'WHISKEY','CIGAR','SHOOTOUT','SPRAY','W_SAWED','W_DOUBLE','W_COLT','W_TOMMY','W_WINCH','W_SPRING','VEST' ];
-      if (noTarget.includes(card.type)){ addLog(`▶️ Hraji ${META[card.type]?.name||card.type}.`); send({ type:'play', cardId: card.id }); return; }
-      selectedCard = card; addLog(`🎯 Vyberte cíl pro ${META[card.type]?.name||card.type}.`); highlightTargets();
-    }
-    function highlightTargets(){
-      const nodes=Array.from(tableEl.querySelectorAll('.opponent')); nodes.forEach(n=>{ n.classList.remove('target'); n.onclick=null; });
-      if (!selectedCard) return;
-      for(const n of nodes){
-        const pid=n.getAttribute('data-player-id');
-        const op=STATE.others.find(o=>o.id===pid);
-        if (!op || op.dead) continue;
-        n.classList.add('target');
-        n.onclick=()=>{ addLog(`▶️ ${META[selectedCard.type]?.name||selectedCard.type} na ${op.name}.`); send({ type:'play', cardId: selectedCard.id, targetId: pid }); selectedCard=null; nodes.forEach(x=>{ x.classList.remove('target'); x.onclick=null; }); };
-      }
-    }
-    endTurnBtn.onclick = ()=>{ if(!isMyTurn()){ addLog('⏳ Nyní nejste na tahu.'); return; } send({ type:'endTurn' }); };
-
-    /* ---------- Timer helpers ---------- */
-    function showGlobalTimer(text, endsAtMs){
-      timerArea.style.display='block'; timerText.textContent=text; animateBar(timerBar, endsAtMs);
-    }
-    function stopGlobalTimer(){
-      timerArea.style.display='none'; if (rafId) cancelAnimationFrame(rafId); rafId=null; timerBar.style.width='100%';
-    }
-    function animateBar(barEl, endsAt){
-      function step(){
-        const remaining = Math.max(0, endsAt - Date.now());
-        const pct = remaining/10000; barEl.style.width = (pct*100)+'%';
-        if (remaining>0) rafId = requestAnimationFrame(step);
-        else barEl.style.width='0%';
-      }
-      step();
-    }
-
-    /* ---------- Modals ---------- */
-    const askShot=document.getElementById('askShot');
-    const shotYes=document.getElementById('askShotYes');
-    const shotNo=document.getElementById('askShotNo');
-    const shotTimer=document.getElementById('shotTimer');
-
-    const askMass=document.getElementById('askMass');
-    const massTitle=document.getElementById('massTitle');
-    const massBody=document.getElementById('massBody');
-    const massYes=document.getElementById('massYes');
-    const massNo=document.getElementById('massNo');
-    const massTimer=document.getElementById('massTimer');
-
-    const askVend=document.getElementById('askVend');
-    const vendYes=document.getElementById('vendYes');
-    const vendNo=document.getElementById('vendNo');
-    const vendTimer=document.getElementById('vendTimer');
-
-    function hideAllModals(){ askShot.classList.remove('show'); askMass.classList.remove('show'); askVend.classList.remove('show'); }
-    function showShotModal(s){
-      askShot.classList.add('show'); animateBar(shotTimer, Date.now()+10000); // 10s – serverově drží přesně, klient jen animuje
-      shotYes.onclick=()=>{ send({ type:'reaction', choice:'DODGE' }); hideAllModals(); };
-      shotNo.onclick =()=>{ send({ type:'reaction', choice:'TAKE_HIT' }); hideAllModals(); };
-    }
-    function showMassModal(title, body, endsAt, needType){
-      askMass.classList.add('show'); massTitle.textContent=title; massBody.textContent=body; animateBar(massTimer, endsAt);
-      massYes.onclick=()=>{ send({ type:'eventReaction', choice:'DISCARD' }); hideAllModals(); };
-      massNo.onclick =()=>{ send({ type:'eventReaction', choice:'PASS' }); hideAllModals(); };
-    }
-    function showVendettaModal(endsAt){
-      askVend.classList.add('show'); animateBar(vendTimer, endsAt);
-      vendYes.onclick=()=>{ send({ type:'eventReaction', choice:'DISCARD' }); hideAllModals(); };
-      vendNo .onclick=()=>{ send({ type:'eventReaction', choice:'PASS' }); hideAllModals(); };
-    }
-  </script>
 </body>
 </html>
