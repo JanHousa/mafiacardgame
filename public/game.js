@@ -27,32 +27,22 @@ ws.onmessage = (ev) => {
   try { msg = JSON.parse(ev.data); }
   catch { addLog('❗ Neplatná zpráva ze serveru.'); return; }
 
-  switch (msg.type) {
-    case 'lobby':
-      if (msg.youId) window.__myId = msg.youId;
-      if (msg.lobby) updateLobby(msg.lobby);
-      break;
+  if (msg.type === 'lobby') updateLobby(msg.lobby);
+  if (msg.type === 'state') applyState(msg.state);
+  if (msg.type === 'info')  addLog(msg.message);
+  if (msg.type === 'error') addLog('❗ ' + msg.message);
 
-    case 'state':
-      if (msg.state) applyState(msg.state);
-      break;
-
-    case 'info':
-      if (msg.message) addLog(msg.message);
-      break;
-
-    case 'error':
-      if (msg.message) addLog('❗ ' + msg.message);
-      break;
-
-    // 🔔 animace hodu kostkou (pokud server posílá)
-    case 'dice':
-      if (msg.symbol) showDiceRoll(msg.symbol);
-      break;
-
-    default:
-      // ignore unknown
-      break;
+  // 🎲 Globální animace hodu pro všechny
+  if (msg.type === 'dice' && msg.symbol) {
+    const purposeMap = {
+      PRISON: 'vězení',
+      VEST: 'vesta',
+      OTHER: '—'
+    };
+    const purposeTxt = purposeMap[msg.purpose] || '—';
+    const byName = msg.byName || findName(msg.byId) || 'Hráč';
+    showDiceRoll(msg.symbol, `${byName} hází kostkou (${purposeTxt})`);
+    addLog(`🎲 ${byName} hází (${purposeTxt}) → ${msg.symbol}`);
   }
 };
 
@@ -467,9 +457,13 @@ function showVendettaModal(endsAt){
   vendNo .onclick = () => { send({ type:'eventReaction', choice:'PASS' }); hideAllModals(); };
 }
 
-function showDiceRoll(symbol) {
+function showDiceRoll(symbol, titleText = '🎲 Hod kostkou') {
   const overlay = document.getElementById('diceOverlay');
   const diceEl = document.getElementById('diceResult');
+  const titleEl = document.getElementById('diceTitle') 
+               || document.querySelector('#diceOverlay h3');
+
+  if (titleEl) titleEl.textContent = titleText;
 
   overlay.classList.add('show');
   diceEl.textContent = '🎲';
@@ -479,12 +473,11 @@ function showDiceRoll(symbol) {
   const interval = setInterval(() => {
     diceEl.textContent = symbols[i % symbols.length];
     i++;
-  }, 90);
+  }, 110);
 
   setTimeout(() => {
     clearInterval(interval);
     diceEl.textContent = symbol;
-    // krátký „hold“, ať si každý výsledek přečte
-    setTimeout(() => overlay.classList.remove('show'), 1800);
-  }, 2200);
+    setTimeout(() => overlay.classList.remove('show'), 1500);
+  }, 1800);
 }

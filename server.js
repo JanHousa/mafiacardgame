@@ -139,9 +139,15 @@ function broadcast(lobby, type, payloadPerClient=null){
   }
 }
 
-function broadcastDice(lobby, symbol, note = "") {
-  broadcast(lobby, "dice", () => ({ symbol, note }));
+function broadcastDice(lobby, byPlayer, purpose, symbol) {
+  broadcast(lobby, "dice", () => ({
+    byId: byPlayer.id,
+    byName: byPlayer.name,
+    purpose,         // "PRISON" | "VEST" | "OTHER"
+    symbol           // např. "🚔" / "❤️" / …
+  }));
 }
+
 
 
 function personalizedState(lobby, viewer){
@@ -215,53 +221,44 @@ function assignRoles(lobby){
     p.role=r; p.maxHp=(r===ROLE.DON?5:4); p.hp=p.maxHp; p.revealedRole=(r===ROLE.DON);
   });
 }
-function startGame(lobby){
-  const n = lobby.players.length;
-  if (n<2 || n>7) return;
-  lobby.started = true;
-  gid=0; lobby.deck=makeDeck(); lobby.discard=[]; lobby.pending=null; lobby.roundNote=null;
-  for(const p of lobby.players){
-    p.inPrison=false; p.weapon=null; p.vest=false; p.dead=false; p._shotThisTurn=0; p._dealtDamageThisRound=false; p.hand.length=0;
-  }
-  assignRoles(lobby);
-  for(let i=0;i<4;i++) for(const p of lobby.players) drawCard(lobby, p, 1);
-  lobby.turnIdx = lobby.players.findIndex(p=>p.role===ROLE.DON);
-  startTurn(lobby);
-  broadcast(lobby,"lobby",(v)=>({ lobby:lobbySummary(lobby), youId:v.id }));
-  broadcast(lobby,"state",(v)=> personalizedState(lobby, v));
-  info(lobby,"Hra začíná. Don je odhalený a je na tahu.");
-}
 function startTurn(lobby){
-  const p=currentPlayer(lobby); if(!p || p.dead){ nextTurn(lobby); return; }
-  for(const x of lobby.players) x._shotThisTurn=0;
-  if (p.role===ROLE.DON){
+  const p = currentPlayer(lobby); 
+  if (!p || p.dead){ nextTurn(lobby); return; }
+
+  for(const x of lobby.players) x._shotThisTurn = 0;
+
+  if (p.role === ROLE.DON) {
     if (lobby.continental.length===0) lobby.continental = shuffle(CONTINENTAL.slice());
     lobby.roundNote = lobby.continental.pop();
     info(lobby, `🃏 Kontinentál: ${lobby.roundNote} (prototyp – bez efektu)`);
-  } else lobby.roundNote=null;
-  if (p.inPrison) {
-  const dice = rollDice();
-  // ukázat VŠEM animaci hodu
-  broadcastDice(lobby, dice.symbol, "prison");
-  info(lobby, `🎲 ${p.name} hází kvůli vězení… ${dice.symbol}`);
-
-  if (dice.symbol === "🚔") {
-    // padlo vězení → pokračuje hned teď
-    p.inPrison = false;
-    info(lobby, `🚔 ${p.name} se dostal z vězení a hraje dál.`);
-    // nepřeskakujeme tah, pokračujeme
   } else {
-    // nepadlo vězení → tohle kolo vynechá, ALE vězení se z něj sundá pro příště
-    p.inPrison = false;
-    info(lobby, `🚔 ${p.name} tohle kolo vynechává. Vězení je odstraněno a příště už hraje normálně.`);
-    nextTurn(lobby);
-    return;
+    lobby.roundNote = null;
   }
-}
+
+  if (p.inPrison){
+    const dice = rollDice();
+
+    // 🔔 všem ukaž hod + důvod
+    broadcastDice(lobby, p, "PRISON", dice.symbol);
+
+    if (dice.symbol === "🚔") {
+      // hodil vězení → pokračuje ve stejném tahu
+      p.inPrison = false;
+      info(lobby, `🚔 ${p.name} hodil 🚔 a pokračuje – vězení zrušeno.`);
+    } else {
+      // nehodil → vězení se ZRUŠÍ, ale hráč TENTO tah vynechá
+      p.inPrison = false;
+      info(lobby, `🚔 ${p.name} nehodil 🚔 – vězení zrušeno, tento tah vynechává.`);
+      nextTurn(lobby);
+      broadcast(lobby,"state",(v)=> personalizedState(lobby, v));
+      return;
+    }
+  }
 
   drawCard(lobby, p, 2);
   info(lobby, `Na tahu: ${p.name}`);
 }
+
 function drawCard(lobby, player, n=1){
   for(let i=0;i<n;i++){
     if (lobby.deck.length===0){
@@ -302,17 +299,25 @@ function weaponRange(player){ return equipRange(player); }
 function withinRange(lobby, a, b){ return distanceAlive(lobby, a, b) <= weaponRange(a); }
 function handleDamage(lobby, target, amount, srcType=null, from=null){
   if (target.dead) return;
-  if (srcType===CARD.SHOT && target.vest){
-  const dice = rollDice();
-  broadcastDice(lobby, dice.symbol, "vest");
-  info(lobby, `🦺 Vesta: ${target.name} hází… ${dice.symbol}`);
-  if (dice.symbol==="❤️"){ info(lobby, `🦺 ❤️ Zásah negován vestou.`); return; }
-}
 
-  target.hp -= amount; if(from) from._dealtDamageThisRound = true;
+  if (srcType===CARD.SHOT && target.vest){
+    const dice = rollDice();
+    // 🔔 ukaž všem, kdo hází a proč
+    broadcastDice(lobby, target, "VEST", dice.symbol);
+
+    info(lobby, `🦺 Vesta: ${target.name} hází… ${dice.symbol}`);
+    if (dice.symbol==="❤️"){
+      info(lobby, `🦺 ❤️ Zásah negován vestou.`);
+      return;
+    }
+  }
+
+  target.hp -= amount; 
+  if (from) from._dealtDamageThisRound = true;
   if (target.hp<=0){ target.hp=0; kill(lobby, target, from); }
   else info(lobby, `💥 ${target.name} utržil ${amount} zranění${from?` (od ${from.name})`:''}.`);
 }
+
 function kill(lobby, p, from=null){
   p.dead=true; p.revealedRole=true;
   while(p.hand.length) discard(lobby, p.hand.pop());
