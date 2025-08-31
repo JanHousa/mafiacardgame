@@ -234,9 +234,3 @@
   background: #263248; color: #d8e6ff; border: 1px solid rgba(255,255,255,.12);
 }
 
-/* reuse pro ikonky u oponentů (pokud ještě nemáš) */
-.equip-icons { display:flex; gap:6px; margin:6px 0 2px; align-items:center; }
-.equip-icon  { width:28px; height:28px; object-fit:contain; border-radius:6px;
-  background:#0e141d; border:1px solid rgba(255,255,255,.1); padding:2px;
-  box-shadow:0 2px 8px rgba(0,0,0,.35);
-}
