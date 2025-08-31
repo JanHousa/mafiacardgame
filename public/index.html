@@ -168,28 +168,111 @@ a:hover { color: var(--accent-2); }
   padding-bottom: 6px;
 }
 /* --- Jednotný vzhled karty, text neprolézá --- */
-.card{
-  --w: 160px; width: var(--w); aspect-ratio: 2.5 / 3.5;
-  position: relative; border-radius: 14px; overflow: hidden;
-  border: 1px solid rgba(255,255,255,.14);
-  background:
-    radial-gradient(120% 60% at 50% -10%, rgba(255,255,255,.08), transparent 50%),
-    linear-gradient(180deg, #1a2231, #0f1622 60%, #0d121a);
-  box-shadow: 0 12px 24px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.08);
-  cursor: pointer; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-}
-.card:hover{ transform: translateY(-4px) rotate(-.3deg); box-shadow: 0 16px 36px rgba(0,0,0,.55); border-color:#7aa2ff55; }
-.card.sel{ outline: 2px solid #7aa2ff; outline-offset: 2px; }
+.card {
+  --w: 160px;
+  width: var(--w);
+  aspect-ratio: 2.5 / 3.5; /* poměr jako klasické karty */
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
 
-.card .art{ position:absolute; inset: 20% 10% 28% 10%; display:flex; align-items:center; justify-content:center; }
-.card .art img{ width:100%; height:100%; object-fit:contain; filter: drop-shadow(0 6px 16px rgba(0,0,0,.45)); }
-.card .corner{ position:absolute; top:6px; left:6px; width:auto; min-width:48px; padding:2px 6px; display:flex; gap:6px; align-items:center; border-radius:8px; background:rgba(0,0,0,.2); }
-.card .corner small{ font-size:10px; color:#a9bbd2; text-transform:uppercase; letter-spacing:.4px; }
-.card .rules{ position:absolute; left:10px; right:10px; bottom:10px; font-size:12px; color:#c6d7ee; text-align:center; }
+  /* 🪵 Pozadí – jemná textura papíru s gradientem */
+  background:
+    url('img/card-texture.png') repeat center/cover, /* můžeš dát jemný pattern */
+    radial-gradient(80% 80% at 50% 30%, rgba(255,255,255,.08), transparent 70%),
+    linear-gradient(180deg, #f5f5f5 0%, #ececec 40%, #e0e0e0 100%);
+  border: 1px solid rgba(0, 0, 0, .2);
+
+  box-shadow:
+    0 8px 18px rgba(0,0,0,.35),
+    inset 0 1px 0 rgba(255,255,255,.4),
+    inset 0 -1px 0 rgba(0,0,0,.2);
+
+  cursor: pointer;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.card:hover {
+  transform: translateY(-4px) rotate(-.3deg);
+  box-shadow:
+    0 14px 28px rgba(0,0,0,.45),
+    inset 0 1px 0 rgba(255,255,255,.4),
+    inset 0 -1px 0 rgba(0,0,0,.25);
+  border-color: #7aa2ff55;
+}
+.card.sel {
+  outline: 2px solid #7aa2ff;
+  outline-offset: 2px;
+}
+
+.card .art {
+  position: absolute;
+  inset: 20% 10% 28% 10%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card .art img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 16px rgba(0,0,0,.4));
+  transition: transform .18s ease;
+}
+/* 🔖 Rohové info */
+.card .corner {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-weight: 800;
+}
+.card .corner small {
+  font-size: 10px;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+.card .corner.tl {
+  top: 6px;
+  left: 6px;
+}
+
+/* 📜 Popisek */
+.card .rules {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  font-size: 12px;
+  color: #222;
+  text-align: center;
+  opacity: .9;
+  font-weight: 500;
+}
 
 /* shine efekt */
-.card::after{ content:""; position:absolute; inset:-40% -40%; background: conic-gradient(from 10deg, transparent 0 60%, rgba(255,255,255,.08) 62%, transparent 64% 100%); transform: translateY(-60%) rotate(15deg); transition: transform .8s ease; pointer-events:none; }
-.card:hover::after{ transform: translateY(10%) rotate(15deg); }
+.card::after {
+  content: "";
+  position: absolute;
+  inset: -40% -40%;
+  background: linear-gradient(120deg, rgba(255,255,255,.15), transparent 60%);
+  transform: rotate(20deg) translateY(-50%);
+  opacity: .4;
+  pointer-events: none;
+  transition: transform .8s ease;
+}
+.card:hover::after {
+  transform: rotate(20deg) translateY(10%);
+  opacity: .55;
+}
+
+.card:hover .art img {
+  transform: scale(1.05);
+}
 
 /* cílení */
 .target { box-shadow: 0 0 0 3px #7aa2ffaa, 0 0 30px #7aa2ff44; border-radius:14px; }
