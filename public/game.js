@@ -433,21 +433,18 @@ function showDiceRoll(symbol) {
   const diceEl = document.getElementById('diceResult');
   overlay.classList.add('show');
   diceEl.textContent = '🎲';
-  
-  // Simulace animace
-  let symbols = ['🎲','💥','🚔','❤️','🔫','💰','🃏'];
+
+  const symbols = ['🎲','💥','🚔','❤️','🔫','💰','🃏'];
   let i = 0;
   const interval = setInterval(() => {
     diceEl.textContent = symbols[i % symbols.length];
     i++;
-  }, 120);
+  }, 100);
 
   setTimeout(() => {
     clearInterval(interval);
     diceEl.textContent = symbol;
-    setTimeout(() => overlay.classList.remove('show'), 1500);
-  }, 2000); // po 2s ukáže výsledek
+    // nech výsledek chvíli „svítit“
+    setTimeout(() => overlay.classList.remove('show'), 1800);
+  }, 2200);
 }
-
-// Použití po hodu
-// showDiceRoll('❤️');
