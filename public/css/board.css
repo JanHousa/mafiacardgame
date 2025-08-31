@@ -96,3 +96,60 @@
   border-color: rgba(255,255,255,0.18);
 }
 
+/* ===== Piles (Draw + Discard) ===== */
+.piles{
+  display:flex; gap:16px; align-items:flex-end;
+  margin:10px 0 4px;
+}
+.pile{
+  position:relative;
+  width:92px; height:124px;
+}
+.pile .stack{ position:relative; width:100%; height:100%; }
+.pile .layer{
+  position:absolute; inset:0;
+  border-radius:10px;
+  box-shadow: 0 8px 18px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.25);
+  border:1px solid rgba(0,0,0,.2);
+  background:#e8e8e8;
+  overflow:hidden;
+}
+.pile.draw .layer{
+  background:
+    radial-gradient(80% 80% at 50% 30%, rgba(255,255,255,.12), transparent 70%),
+    linear-gradient(180deg,#f7f7f7 0%, #ededed 40%, #e3e3e3 100%);
+}
+.pile.draw .layer::before{
+  /* zadní strana – “logo” */
+  content:"🕴️"; display:grid; place-items:center;
+  font-size:34px; color:#1c2a3d; opacity:.75;
+  width:100%; height:100%;
+  background:
+    url("img/card-texture.png") center/cover,
+    linear-gradient(180deg,#f6f6f6, #ececec);
+}
+
+/* lehké odsazení vrstev pro “stoh” */
+.pile .layer:nth-child(1){ transform: translate(4px,4px); }
+.pile .layer:nth-child(2){ transform: translate(2px,2px); }
+.pile .layer:nth-child(3){ transform: translate(0,0); }
+
+.card-face{
+  width:100%; height:100%; object-fit:cover; background:#f0f0f0;
+}
+
+/* Badge s počtem karet */
+.count-badge{
+  position:absolute; bottom:-8px; right:-8px;
+  min-width:28px; height:28px; padding:0 8px;
+  display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(180deg,#1f2836,#151b25);
+  color:#ecf2f8; border:1px solid rgba(255,255,255,.12);
+  border-radius:999px; font-weight:800; font-size:12px;
+  box-shadow:0 6px 14px rgba(0,0,0,.35);
+}
+
+/* prázdný odhazovák */
+.pile.discard.empty .card-face{
+  filter: grayscale(1) opacity(.4);
+}

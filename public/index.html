@@ -104,6 +104,28 @@
             <div>🗑️ Odhazovací: <b id="discardCount">0</b></div>
           </div>
 
+          <!-- 🔹 Piles (draw + discard) -->
+          <div class="piles">
+            <!-- Draw pile (zadní strana) -->
+            <div class="pile draw" id="drawPile" title="Balíček">
+              <div class="stack">
+                <div class="card-back layer"></div>
+                <div class="card-back layer"></div>
+                <div class="card-back layer"></div>
+              </div>
+              <div class="count-badge" id="deckCountBadge">0</div>
+            </div>
+
+            <!-- Discard pile (poslední karta navrchu) -->
+            <div class="pile discard" id="discardPile" title="Odhazovací balíček">
+              <div class="stack">
+                <img id="discardTopImg" class="card-face layer" alt="Poslední karta" />
+              </div>
+              <div class="count-badge" id="discardCountBadge">0</div>
+            </div>
+          </div>
+
+
           <!-- Global event timer -->
           <div id="timerArea" style="display:none">
             <div class="hud" id="timerText"></div>

@@ -154,11 +154,14 @@ function personalizedState(lobby, viewer){
   const you = redactPlayer(viewer, viewer, true);
   const others = lobby.players.filter(p=>p.id!==viewer.id).map(p=>redactPlayer(p, viewer, false));
   const turnPlayer = lobby.players[lobby.turnIdx];
+  const top = lobby.discard.length ? lobby.discard[lobby.discard.length - 1].type : null;
+
   return {
     state: {
       you, others,
       deckCount: lobby.deck.length,
       discardCount: lobby.discard.length,
+      discardTop: top,              // ⬅️ přidáno
       turnPlayerId: turnPlayer?.id || null,
       started: lobby.started,
       pending: redactPending(lobby.pending, viewer),
@@ -166,6 +169,7 @@ function personalizedState(lobby, viewer){
     }
   };
 }
+
 function redactPlayer(p, viewer, isYou){
   return {
     id:p.id, name:p.name, hp:p.hp, maxHp:p.maxHp, dead:p.dead,
