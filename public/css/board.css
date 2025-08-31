@@ -111,7 +111,9 @@
   border-radius:10px;
   box-shadow: 0 8px 18px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.25);
   border:1px solid rgba(0,0,0,.2);
-  background:#e8e8e8;
+  background:url('img/card-texture.png') repeat center/cover,
+    radial-gradient(80% 80% at 50% 30%, rgba(255,255,255,.08), transparent 70%),
+    linear-gradient(180deg, #f5f5f5 0%, #ececec 40%, #e0e0e0 100%);
   overflow:hidden;
 }
 .pile.draw .layer{
