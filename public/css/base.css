@@ -61,3 +61,4 @@ a:hover { color: var(--accent-2); }
 }
 .input:focus { outline: none; border-color: var(--accent); }
 .input.big { padding: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+

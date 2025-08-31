@@ -1,0 +1,42 @@
+
+/* ===== Scrollbar – styl noir/mafia ===== */
+
+/* WebKit scrollbary (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 12px;             /* šířka */
+  height: 12px;            /* pro horizontální */
+}
+
+::-webkit-scrollbar-track {
+  background: #0d121b;      /* tmavý track */
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #444b5a, #1f2530);
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.15);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,.1), 0 1px 4px rgba(0,0,0,.4);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #555e70, #2a303d);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #555e70 #0d121b; /* thumb, track */
+}
+
+/* Pro kontejnery se scrollbarem */
+.log, .hand, .table {
+  scrollbar-width: thin;
+}
+
+/* Jemné efekty pro panel */
+.panel {
+  border-radius: 10px;
+  overflow: hidden;
+}
