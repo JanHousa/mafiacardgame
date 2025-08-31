@@ -680,6 +680,16 @@ wss.on("connection",(ws)=>{
       const p = lobby.players.find(x=>x.id===ws._playerId); if(!p) return;
       eventReaction(lobby, p, { choice: msg.choice });
     }
+    /* ✅ Nové: bezpečný statusUpdate (aktuálně jen inPrison) */
+    else if (msg.type === "statusUpdate"){
+      const lobby = lobbies.get(ws._lobbyId); if (!lobby) return;
+      const p = lobby.players.find(x => x.id === ws._playerId); if (!p) return;
+
+      if (msg.field === "inPrison"){
+        p.inPrison = !!msg.value;
+        broadcast(lobby,"state",(v)=> personalizedState(lobby, v));
+      }
+    }
     else if (msg.type==="get"){
       const lobby = lobbies.get(ws._lobbyId); if(!lobby) return;
       const p = lobby.players.find(x=>x.id===ws._playerId); if(!p) return;
@@ -698,5 +708,48 @@ wss.on("connection",(ws)=>{
   });
 });
 
+
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, ()=> console.log(`✅ Server běží na http://localhost:${PORT}`));
+
+function startGame(lobby){
+  if (lobby.started) return;
+
+  // reset lobby
+  lobby.started = true;
+  lobby.turnIdx = 0;
+  lobby.deck = makeDeck();
+  lobby.discard = [];
+  lobby.pending = null;
+  lobby.roundNote = null;
+
+  // role, HP a základní stav
+  assignRoles(lobby);
+  for (const p of lobby.players){
+    p.ready = false;
+    p.dead = false;
+    p.hand = [];
+    p.weapon = null;
+    p.vest = false;
+    p.inPrison = false;
+    p._shotThisTurn = 0;
+    p._dealtDamageThisRound = false;
+    // hp/maxHp už nastavuje assignRoles, ale pro jistotu:
+    p.hp = p.maxHp || 4;
+  }
+
+  // rozdej úvodní karty (např. 5)
+  for (let i = 0; i < 5; i++){
+    for (const p of lobby.players){
+      drawCard(lobby, p, 1);
+    }
+  }
+
+  info(lobby, "🎬 Hra začíná!");
+  // pošleme počáteční stav všem
+  broadcast(lobby,"state",(v)=> personalizedState(lobby, v));
+  // spustíme první tah (ten hráč si ještě lízne 2 dle tvojí logiky)
+  startTurn(lobby);
+  // a znovu pošleme stav, ať se promítne tah + líznuté karty
+  broadcast(lobby,"state",(v)=> personalizedState(lobby, v));
+}
