@@ -326,57 +326,76 @@ div.innerHTML = `
 
 function renderOpponents(resetTargets = false) {
   table.innerHTML = '';
-  (STATE?.others || []).forEach(op => {
+  const others = STATE?.others || [];
+
+  others.forEach(op => {
     const wrap = document.createElement('div');
     wrap.className = 'opponent' + (op.dead ? ' dead' : '');
     wrap.setAttribute('data-player-id', op.id);
-    
-    // ❤️ Srdíčka
-    const hearts = document.createElement('div');
-    hearts.className = 'hearts';
-    const oMax = op.maxHp || op.hp || 0;
-    for (let i = 0; i < oMax; i++) {
-      const h = document.createElement('span');
-      h.className = 'heart ' + (i < op.hp ? 'full' : 'empty');
-      h.textContent = '♥';
-      hearts.appendChild(h);
-    }
-    wrap.insertBefore(hearts, wrap.querySelector('.cards'));
 
-    table.appendChild(wrap);
-  });
-    const roleHTML = `<div class="role-pill ${op.roleRevealed ? 'revealed' : ''}">${op.roleRevealed ? (op.role || '—') : 'Neznámá'}</div>`;
+    const roleHTML =
+      `<span class="role-pill ${op.roleRevealed ? 'revealed' : ''}">
+         ${op.roleRevealed ? (op.role || '—') : 'Neznámá'}
+       </span>`;
+
     const isTurn = (STATE?.turnPlayerId === op.id);
     const turnHTML = isTurn ? `<span class="turn-badge">Na tahu</span>` : '';
 
-    // 🔹 Ikony vybavení místo badge
+    // Ikony vybavení (zbraň + vesta)
     const equipIcons = [];
     if (op.weapon) {
-      equipIcons.push(`<img src="${CARD_IMG[op.weapon.type] || FALLBACK_CARD_IMG}" alt="${op.weapon.name}" title="${op.weapon.name}" class="equip-icon">`);
+      equipIcons.push(
+        `<img src="${CARD_IMG[op.weapon.type] || FALLBACK_CARD_IMG}"
+              alt="${op.weapon.name}"
+              title="${op.weapon.name}"
+              class="equip-icon">`
+      );
     }
     if (op.vest) {
-      equipIcons.push(`<img src="${CARD_IMG.VEST || FALLBACK_CARD_IMG}" alt="Vesta" title="Vesta" class="equip-icon">`);
+      equipIcons.push(
+        `<img src="${CARD_IMG.VEST || FALLBACK_CARD_IMG}"
+              alt="Vesta"
+              title="Vesta"
+              class="equip-icon">`
+      );
     }
     const equipHTML = equipIcons.length
       ? `<div class="equip-icons">${equipIcons.join('')}</div>` : '';
 
+    // Sestav obsah karty oponenta
     wrap.innerHTML = `
       ${turnHTML}
-      <div class="who"><div>${op.name}</div>${roleHTML}</div>
+      <div class="who">
+        <div class="name">${op.name}</div>
+        ${roleHTML}
+      </div>
       ${equipHTML}
+      <div class="hearts"></div>
       <div class="cards">Karty v ruce: ${op.handCount}</div>
     `;
 
-    
+    // ♥ Srdíčka do vyhrazeného kontejneru
+    const heartsEl = wrap.querySelector('.hearts');
+    const max = op.maxHp || op.hp || 0;
+    for (let i = 0; i < max; i++) {
+      const h = document.createElement('span');
+      h.className = 'heart ' + (i < op.hp ? 'full' : 'empty');
+      h.textContent = '♥';
+      heartsEl.appendChild(h);
+    }
+
+    table.appendChild(wrap);
+  });
 
   if (resetTargets) {
-    Array.from(table.querySelectorAll('.opponent')).forEach(n => { 
-      n.classList.remove('target'); 
-      n.onclick = null; 
+    Array.from(table.querySelectorAll('.opponent')).forEach(n => {
+      n.classList.remove('target');
+      n.onclick = null;
     });
     selectedCard = null;
   }
 }
+
 
 
 
