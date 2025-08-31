@@ -222,8 +222,22 @@ hand.innerHTML = '';
   const m = META[card.type] || { name: card.type, emoji: '🃏', desc: '' };
   const div = document.createElement('div');
   div.className = 'card';
-  div.setAttribute('data-card-id', card.id);
-  div.innerHTML = `<div class="ct">${m.name}</div><div class="emoji">${m.emoji}</div><div class="text">${m.desc}</div>`;
+div.setAttribute('data-card-id', card.id);
+
+div.innerHTML = `
+  <div class="corner tl">
+    <span>${m.emoji}</span>
+    <small>${m.name}</small>
+  </div>
+  <div class="corner br">
+    <span>${m.emoji}</span>
+    <small>${m.name}</small>
+  </div>
+
+  <div class="art">${m.emoji}</div>
+  <div class="rules">${m.desc}</div>
+`;
+
   div.onclick = () => onPlay(card);
   hand.appendChild(div);
 });
@@ -288,13 +302,12 @@ const oMax = op.maxHp || op.hp || 0;
 
 for (let i = 0; i < oMax; i++) {
   const h = document.createElement('span');
-  h.className = 'heart ' + (i < op.hp ? 'full' : 'empty'); // full = aktuální HP, empty = chybějící
+  h.className = 'heart ' + (i < op.hp ? 'full' : 'empty');
   h.textContent = '♥';
   hearts.appendChild(h);
 }
-
-// 3) Vlož srdíčka do karty soupeře
 wrap.insertBefore(hearts, wrap.querySelector('.cards'));
+
 
 
     table.appendChild(wrap);
@@ -431,6 +444,7 @@ function showVendettaModal(endsAt){
 function showDiceRoll(symbol) {
   const overlay = document.getElementById('diceOverlay');
   const diceEl = document.getElementById('diceResult');
+
   overlay.classList.add('show');
   diceEl.textContent = '🎲';
 
@@ -439,12 +453,12 @@ function showDiceRoll(symbol) {
   const interval = setInterval(() => {
     diceEl.textContent = symbols[i % symbols.length];
     i++;
-  }, 100);
+  }, 90);
 
   setTimeout(() => {
     clearInterval(interval);
     diceEl.textContent = symbol;
-    // nech výsledek chvíli „svítit“
+    // krátký „hold“, ať si každý výsledek přečte
     setTimeout(() => overlay.classList.remove('show'), 1800);
   }, 2200);
 }
