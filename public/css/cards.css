@@ -24,8 +24,42 @@
 .card .art img { width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 6px 16px rgba(0,0,0,.4)); transition:transform .18s ease; }
 .card:hover .art img { transform:scale(1.05); }
 
-.card .corner { position:absolute; width:48px; height:48px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:800; }
-.card .corner small { font-size:10px; color:#333; text-transform:uppercase; letter-spacing:.4px; }
+.card .corner{
+  position:absolute;
+  top:6px; left:6px;             /* .corner.tl může zůstat, ale není nutná */
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 10px;
+  height:auto;                    /* nefixuj výšku */
+  border-radius:12px;
+  background: rgba(0,0,0,.55);    /* tmavší pilulka na světlé kartě */
+  border: 1px solid rgba(255,255,255,.18);
+  box-shadow: 0 6px 14px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.12);
+  color:#f3f6fb;
+  font-weight:800;
+  line-height:1;
+  backdrop-filter: blur(2px);
+}
+.card .corner .icon{
+  font-size:14px;
+  line-height:1;
+  display:inline-block;
+  transform: translateY(-.5px);
+}
+.card .corner small{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+  color:#e8f0ff;
+  margin:0;
+}
+
+.card:hover .corner{
+  background: rgba(0,0,0,.62);
+  border-color: rgba(255,255,255,.24);
+}
+
 .card .corner.tl { top:6px; left:6px; }
 .card .rules { position:absolute; left:10px; right:10px; bottom:10px; font-size:12px; color:#222; text-align:center; opacity:.9; font-weight:500; }
 
