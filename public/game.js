@@ -373,3 +373,31 @@ function showVendettaModal(endsAt){
   vendYes.onclick = () => { send({ type:'eventReaction', choice:'DISCARD' }); hideAllModals(); };
   vendNo .onclick = () => { send({ type:'eventReaction', choice:'PASS' }); hideAllModals(); };
 }
+
+// DEBUG: Mockovací stav hry (ukáže hráče a karty)
+setTimeout(() => {
+  const mockState = {
+    you: {
+      id: 'p1',
+      name: 'Já',
+      hp: 4, maxHp: 4,
+      hand: [
+        {id: 'c1', type: 'SHOT'},
+        {id: 'c2', type: 'DODGE'},
+        {id: 'c3', type: 'WHISKEY'}
+      ],
+      weapon: {name: 'Colt 1911'},
+      vest: false
+    },
+    others: [
+      {id:'p2',name:'Bruno',hp:3,maxHp:4,handCount:3,roleRevealed:false,weapon:null,vest:false},
+      {id:'p3',name:'Giovanni',hp:4,maxHp:4,handCount:4,roleRevealed:true,role:'Policie',weapon:{name:'Tommy Gun'},vest:true}
+    ],
+    deckCount: 20,
+    discardCount: 5,
+    turnPlayerId: 'p1'
+  };
+  applyState(mockState);
+  boardPanel.style.display = 'block';
+  lobbyPanel.style.display = 'none';
+}, 1000);
