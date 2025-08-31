@@ -6,304 +6,108 @@
   <title>Mafia Stand-off – Realtime</title>
   <meta name="description" content="Mafia Stand-off: Realtime karetní hra inspirovaná noir mafiánským světem. Hrajte s přáteli v reálném čase.">
   <style>
-    /* =========================
-       🎨 TÉMATICKÉ PROMĚNNÉ
-    ========================= */
-    :root {
-      --bg: #0e1116;
-      --panel: #0f141c;
-      --panel-2:#0b1119;
-      --glass: #0d1320cc;
-      --muted: #93a4b8;
-      --text: #ecf2f8;
-      --accent: #5eead4;
-      --accent-2: #7aa2ff;
-      --warn: #ff7b7b;
-      --ok: #7bffbd;
-      --stroke: #2a3b52;
-      --shadow: 0 20px 60px rgba(0,0,0,.45);
-      --shadow-deep: 0 25px 70px rgba(0,0,0,.55);
-      --radius: 20px;
-      --transition-fast: 0.15s ease;
-      --transition-slow: 0.35s ease;
-    }
-
-    /* =========================
-       🖥️ RESET A TYPOGRAFIE
-    ========================= */
-    * { box-sizing: border-box; }
-    html, body { height: 100%; }
-    body {
-      margin: 0;
-      background:
-        radial-gradient(1200px 800px at 10% -10%, #1a2230 0%, var(--bg) 60%) fixed,
-        var(--bg);
-      color: var(--text);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
-      line-height: 1.5;
-      font-size: 15px;
-    }
-    a { color: var(--accent); text-decoration: none; transition: color var(--transition-fast); }
-    a:hover { color: var(--accent-2); }
-
-    /* =========================
-       📦 LAYOUT
-    ========================= */
-    #app { max-width: 1200px; margin: 0 auto; padding: 16px 16px 24px; display: grid; gap: 14px; }
-    .panel {
-      background: linear-gradient(180deg, var(--panel), #0f141b);
-      border: 1px solid rgba(255,255,255,.06);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 14px;
-      transition: background var(--transition-slow), transform var(--transition-fast);
-    }
-    .panel:hover { transform: translateY(-1px); }
-
-    /* =========================
-       🔘 BUTTONS
-    ========================= */
-    .btn {
-      border: 1px solid rgba(255,255,255,.08);
-      background: linear-gradient(180deg, #1f2836, #151b25);
-      color: var(--text);
-      padding: 10px 14px;
-      border-radius: 12px;
-      cursor: pointer;
-      box-shadow: var(--shadow);
-      font-weight: 600;
-      transition: all var(--transition-fast);
-      user-select: none;
-    }
-    .btn:hover:not(:disabled) { transform: translateY(-1px); border-color: rgba(255,255,255,.18); }
-    .btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
-    .btn-primary { background: linear-gradient(180deg, #2a3344, #18202e); border-color: #3b4a63; }
-    .btn-success { background: linear-gradient(180deg, #1f3a2e, #10261f); border-color: #1b6b53; }
-    .btn-secondary { background: linear-gradient(180deg, #1f2836, #151b25); }
-    .btn.pill { border-radius: 999px; padding: 12px 16px; font-weight: 800 }
-
-    /* =========================
-       🖋️ FORMULÁŘE
-    ========================= */
-    .input {
-      background: #0f141b;
-      border: 1px solid var(--stroke);
-      border-radius: 12px;
-      padding: 10px 12px;
-      color: var(--text);
-      transition: border var(--transition-fast);
-    }
-    .input:focus { outline: none; border-color: var(--accent); }
-    .input.big { padding: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
-
-    /* =========================
-       👥 OSTATNÍ UI PRVKY
-    ========================= */
-    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-    .muted { color: var(--muted); }
-    .title { font-weight: 800; letter-spacing: .3px; }
-    .hint { color: #a7b9cf; font-size: 12px; }
-
-    /* =========================
-       🎴 HERNÍ STŮL
-    ========================= */
-    .table { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    .opponent {
-      background: linear-gradient(180deg, var(--panel), #10151c);
-      border: 1px solid rgba(255,255,255,.06);
-      border-radius: var(--radius);
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      position: relative;
-      box-shadow: var(--shadow);
-      min-height: 132px;
-      transition: border var(--transition-fast), transform var(--transition-fast);
-    }
-    .opponent:hover { border-color: var(--accent-2); transform: translateY(-2px); }
-    .who { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 700; }
-    .role-pill {
-      font-size: 12px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: #1f2937;
-      color: #b7c5d8;
-      border: 1px solid rgba(255,255,255,.06);
-    }
-    .role-pill.revealed { background: #253044; color: #cfe3ff; }
-    .status { display: flex; gap: 6px; flex-wrap: wrap; }
-    .badge {
-      font-size: 12px; padding: 3px 8px;
-      border-radius: 10px; border: 1px solid rgba(255,255,255,.08);
-      color: #d3deea; background: #1e2633;
-    }
-    .hearts { display: flex; gap: 4px; }
-    .heart {
-      width: 20px;
-      height: 20px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      line-height: 1;
-      filter: drop-shadow(0 2px 6px rgba(0,0,0,.35));
-    }
-    .heart.full { color: #ff4d4d; }   /* aktuální HP */
-    .heart.empty { color: #5b6b7f; }  /* chybějící HP (maxHp) */
-
-    .cards { font-size: 13px; color: var(--muted); }
-
-    /* =========================
-       🃏 KARTY
-    ========================= */
-    .hand { display: flex; flex-wrap: wrap; gap: 10px; min-height: 90px; }
-    .card {
-      width: 140px; min-height: 86px;
-      background: linear-gradient(120deg, #ffffff09 0%, #ffffff00 40%), linear-gradient(180deg, #19222e, #11161f);
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 14px;
-      padding: 8px;
-      display: flex; flex-direction: column; gap: 6px;
-      cursor: pointer; position: relative;
-      box-shadow: var(--shadow);
-      transition: transform var(--transition-fast), border var(--transition-fast);
-    }
-    .card:hover { transform: translateY(-2px); border-color: var(--accent-2); }
-    .card.sel { outline: 2px solid var(--accent-2); }
-    .card .ct { font-size: 12px; text-transform: uppercase; letter-spacing: .6px; color: #c6d7ee; }
-    .card .emoji { font-size: 20px; }
-    .card .text { font-size: 12px; color: #b8c5d7; }
-    .target { outline: 2px dashed var(--accent-2); border-radius: 12px; }
-
-    /* =========================
-       📜 LOG A HUD
-    ========================= */
-    .log { padding: 12px; max-height: 260px; overflow-y: auto; font-size: 13px; background: #0a1018; border:1px solid #1c2940; border-radius:12px }
-    .log div { margin-bottom: 2px; animation: fadeIn .3s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
-
-    /* =========================
-       ⏳ TIMER BAR
-    ========================= */
-    .timerWrap { margin: 8px 0; height: 8px; background: #192233; border-radius: 999px; overflow: hidden; border: 1px solid #2b3b54; }
-    .timerBar { height: 100%; width: 100%; background: linear-gradient(90deg, #6ee7ff, #7aa2ff); transition: width .1s linear; }
-    .timerBar.red { background: linear-gradient(90deg, #ff8a8a, #ff5b5b); }
-    .timerBar.gold { background: linear-gradient(90deg, #ffe082, #ffc13d); }
-
-    /* =========================
-       🔲 MODÁLNÍ OVERLAYE
-    ========================= */
-    .overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,.55);
-      display: none; align-items: center; justify-content: center;
-      z-index: 40; padding: 20px;
-    }
-    .overlay.show { display: flex; animation: fadeIn .4s ease; }
-    .ask-box {
-      background: linear-gradient(180deg, #17202c, #0e141c);
-      border: 1px solid #2a3b52;
-      border-radius: 16px;
-      padding: 16px;
-      max-width: 520px; width: 100%;
-      box-shadow: var(--shadow);
-      text-align: center;
-    }
-
-    /* =========================
-       🧭 LOBBY VZHLED
-    ========================= */
-    .lobby-hero{ padding:0; overflow:hidden; border-radius:var(--radius); position:relative }
-    .lobby-banner{ width:100%; padding-top:30%; position:relative; overflow:hidden; border-bottom:1px solid rgba(255,255,255,.06) }
-    .lobby-banner img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:brightness(.99) contrast(1) }
-    .lobby-wrap{ display:grid; grid-template-columns:1.1fr .9fr; gap:0 }
-    .lobby-left{ padding:24px; display:flex; flex-direction:column; gap:14px }
-    .lobby-right{ padding:22px; border-left:1px solid rgba(255,255,255,.06) }
-    .lobby-title{ display:flex; gap:10px; align-items:center }
-    .logo-img{ width:54px; height:54px; border-radius:12px; object-fit:contain; background:#0c1420; padding:4px; border:1px solid rgba(255,255,255,.08); box-shadow:0 4px 10px rgba(0,0,0,.5) }
-    .glass{ background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)), linear-gradient(180deg, var(--panel), var(--panel-2)); border:1px solid rgba(255,255,255,.12); border-radius:18px; padding:14px }
-    .lobby-code{ display:inline-flex; align-items:center; gap:8px; font-weight:800; letter-spacing:1.4px; background:linear-gradient(180deg,#1b2331,#111824); padding:8px 12px; border-radius:999px; border:1px solid rgba(255,255,255,.12); }
-    .players-card .list{ margin-top:6px; line-height:1.6; }
-    .players-card .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:8px; background:#7aa2ff }
-    .cta-row{ display:flex; gap:10px; flex-wrap:wrap; }
-
-    /* =========================
-       📱 RESPONSIVITA
-    ========================= */
-    @media (max-width:980px){
-      .lobby-wrap{ grid-template-columns:1fr }
-      .lobby-right{ border-left:none; border-top:1px solid rgba(255,255,255,.06) }
-    }
-    @media (max-width:930px) {
-      .table { grid-template-columns: 1fr; }
-      .center { grid-template-columns: 1fr; }
-    }
-    @media (max-width:520px) { .card { width: 100%; } }
-
-    /* === Board layout === */
-    .game-table {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 14px;
-      margin-top: 14px;
-    }
-    .opponents-area {
-      background: linear-gradient(180deg, #10151c, #0b1016);
-      border-radius: var(--radius);
-    }
-    .player-area {
-      background: linear-gradient(180deg, #141c28, #0e141c);
-      border-radius: var(--radius);
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .player-header {
-      display: flex;
-      gap: 14px;
-      align-items: center;
-      padding: 8px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
-    .player-avatar {
-      width: 64px;
-      height: 64px;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid rgba(255,255,255,.12);
-      background: #0b1016;
-      box-shadow: var(--shadow);
-    }
-    .player-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .player-info { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-    .player-name { font-weight: 800; font-size: 18px; }
-    .player-hp { font-size: 18px; display: flex; gap: 2px; }
-    .player-equip {
-      display: flex; flex-direction: column; gap: 4px; padding: 8px;
-      background: rgba(255,255,255,0.02); border-radius: 12px; margin: 0 8px;
-    }
-    .equip-slot { font-size: 14px; color: var(--muted); }
-    .player-hand { padding: 8px; }
-    .log-panel { margin-top: 14px; }
-
-    @media(max-width: 800px){
-      .game-table { grid-template-columns: 1fr; }
-    }
-
-    #diceResult {
-  animation: diceRoll 1s ease infinite;
+    
+/* =========================
+   🎨 TÉMATICKÉ PROMĚNNÉ
+========================= */
+:root {
+  --bg: #0e1116;
+  --panel: #0f141c;
+  --panel-2:#0b1119;
+  --glass: #0d1320cc;
+  --muted: #93a4b8;
+  --text: #ecf2f8;
+  --accent: #5eead4;
+  --accent-2: #7aa2ff;
+  --warn: #ff7b7b;
+  --ok: #7bffbd;
+  --stroke: #2a3b52;
+  --shadow: 0 20px 60px rgba(0,0,0,.45);
+  --shadow-deep: 0 25px 70px rgba(0,0,0,.55);
+  --radius: 20px;
+  --transition-fast: 0.15s ease;
+  --transition-slow: 0.35s ease;
 }
 
-@keyframes diceRoll {
-  0% { transform: rotate(0deg); }
-  25% { transform: rotate(20deg); }
-  50% { transform: rotate(-20deg); }
-  75% { transform: rotate(10deg); }
-  100% { transform: rotate(0deg); }
+/* =========================
+   🖥️ RESET A TYPOGRAFIE
+========================= */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(1200px 800px at 10% -10%, #1a2230 0%, var(--bg) 60%) fixed,
+    var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.5;
+  font-size: 15px;
 }
+a { color: var(--accent); text-decoration: none; transition: color var(--transition-fast); }
+a:hover { color: var(--accent-2); }
 
-/* 🎲 Stolová atmosféra */
-.board-top { position: relative; }
+/* =========================
+   📦 LAYOUT
+========================= */
+#app { max-width: 1200px; margin: 0 auto; padding: 16px 16px 24px; display: grid; gap: 14px; }
+.panel {
+  background: linear-gradient(180deg, var(--panel), #0f141b);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px;
+  transition: background var(--transition-slow), transform var(--transition-fast);
+}
+.panel:hover { transform: translateY(-1px); }
+
+/* =========================
+   🔘 BUTTONS
+========================= */
+.btn {
+  border: 1px solid rgba(255,255,255,.08);
+  background: linear-gradient(180deg, #1f2836, #151b25);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  font-weight: 600;
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+.btn:hover:not(:disabled) { transform: translateY(-1px); border-color: rgba(255,255,255,.18); }
+.btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+.btn-primary { background: linear-gradient(180deg, #2a3344, #18202e); border-color: #3b4a63; }
+.btn-success { background: linear-gradient(180deg, #1f3a2e, #10261f); border-color: #1b6b53; }
+.btn-secondary { background: linear-gradient(180deg, #1f2836, #151b25); }
+.btn.pill { border-radius: 999px; padding: 12px 16px; font-weight: 800 }
+
+/* =========================
+   🖋️ FORMULÁŘE
+========================= */
+.input {
+  background: #0f141b;
+  border: 1px solid var(--stroke);
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: var(--text);
+  transition: border var(--transition-fast);
+}
+.input:focus { outline: none; border-color: var(--accent); }
+.input.big { padding: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+
+/* =========================
+   👥 OSTATNÍ UI PRVKY
+========================= */
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.muted { color: var(--muted); }
+.title { font-weight: 800; letter-spacing: .3px; }
+.hint { color: #a7b9cf; font-size: 12px; }
+
+/* =========================
+   🎴 STŮL A OSTATNÍ HRÁČI
+========================= */
 .game-table {
   position: relative;
   background:
@@ -315,15 +119,14 @@
   border: 1px solid rgba(255,255,255,.06);
   box-shadow: inset 0 0 0 2px rgba(255,255,255,.03), 0 30px 80px rgba(0,0,0,.55);
   padding: 14px;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 14px;
+  margin-top: 14px;
 }
 .opponents-area, .player-area { background: rgba(8,12,18,.55); backdrop-filter: blur(4px); }
 
-/* 🧿 Sedadla (ostatní hráči) */
-.table { 
-  display: grid; 
-  grid-template-columns: repeat(3, minmax(0,1fr)); 
-  gap: 14px; 
-}
+.table { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
 .opponent {
   background: linear-gradient(180deg, rgba(23,30,43,.9), rgba(14,20,28,.92));
   border: 1px solid rgba(255,255,255,.08);
@@ -335,91 +138,64 @@
 .opponent:hover { transform: translateY(-2px); border-color: #7aa2ff55; box-shadow: 0 16px 34px rgba(0,0,0,.5); }
 .opponent.dead { opacity:.55; filter: grayscale(.25); }
 
-/* ❤️ životy – stejné velké ikony, barvou odlišené */
+.role-pill { font-size: 11px; padding: 4px 8px; border-radius: 10px; background: #1d2635; color: #bfd4ff; border: 1px solid rgba(255,255,255,.08); }
+.role-pill.revealed { background:#243149; color:#d7e7ff; }
+.status .badge { background:#1a2332; border-color:#2b3b54; }
+
+/* ❤️ ŽIVOTY */
 .hearts { display:flex; gap:4px; align-items:center; }
 .heart { font-size: 20px; line-height: 1; filter: drop-shadow(0 2px 6px rgba(0,0,0,.35)); }
 .heart.full  { color: #ff5252; text-shadow: 0 0 10px rgba(255,82,82,.25); }
 .heart.empty { color: #3a475b; opacity: .85; }
 
-/* 🪪 „role“ pilulka a statusy */
-.role-pill {
-  font-size: 11px; padding: 4px 8px; border-radius: 10px;
-  background: #1d2635; color: #bfd4ff; border: 1px solid rgba(255,255,255,.08);
-}
-.role-pill.revealed { background:#243149; color:#d7e7ff; }
-.status .badge { background:#1a2332; border-color:#2b3b54; }
-
-/* 🃏 Herní karta – nový vzhled */
+/* =========================
+   🃏 KARTY
+========================= */
 .hand { display:flex; flex-wrap: wrap; gap:12px; padding: 6px 0; }
 .card {
-  --w: 160px; width: var(--w); aspect-ratio: 2.5 / 3.5; /* jako poker karta */
-  position: relative;
-  border-radius: 14px;
+  --w: 160px; width: var(--w); aspect-ratio: 2.5 / 3.5;
+  position: relative; border-radius: 14px; overflow: hidden;
   border: 1px solid rgba(255,255,255,.14);
   background:
     radial-gradient(120% 60% at 50% -10%, rgba(255,255,255,.08), transparent 50%),
     linear-gradient(180deg, #1a2231, #0f1622 60%, #0d121a);
   box-shadow: 0 12px 24px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.08);
-  cursor: pointer;
-  transform: translateZ(0);
-  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-  overflow: hidden;
+  cursor: pointer; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
 .card:hover { transform: translateY(-4px) rotate(-.3deg); box-shadow: 0 16px 36px rgba(0,0,0,.55); border-color:#7aa2ff55; }
 .card.sel   { outline: 2px solid #7aa2ff; outline-offset: 2px; }
 
-/* rohové indexy */
-.card .corner{
-  position:absolute; width:48px; height:48px; display:flex; flex-direction:column; 
-  align-items:center; justify-content:center; gap:2px;
-  font-weight: 800;
-}
-.card .corner small{ font-size:10px; color:#a9bbd2; text-transform: uppercase; letter-spacing:.4px; }
+/* artwork */
+.card .art{ position:absolute; inset: 20% 10% 28% 10%; display:flex; align-items:center; justify-content:center; }
+.card .art img{ width:100%; height:100%; object-fit:contain; filter: drop-shadow(0 6px 16px rgba(0,0,0,.45)); transition: transform .18s ease; }
+.card:hover .art img{ transform: scale(1.03); }
+
+/* název a emoji vlevo nahoře */
+.card .corner{ position:absolute; width:48px; height:48px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; font-weight:800; }
+.card .corner small{ font-size:10px; color:#a9bbd2; text-transform:uppercase; letter-spacing:.4px; }
 .card .corner.tl{ top:6px; left:6px; }
-.card .corner.br{ bottom:6px; right:6px; transform: rotate(180deg); }
 
-/* „artwork“ uprostřed */
-.card .art{
-  position:absolute; inset: 20% 10% 28% 10%;
-  display:flex; align-items:center; justify-content:center;
-  font-size: 48px;
-  filter: drop-shadow(0 6px 16px rgba(0,0,0,.45));
-}
+/* text dole */
+.card .rules{ position:absolute; left:10px; right:10px; bottom:10px; font-size: 12px; color:#c6d7ee; text-align:center; opacity:.95; }
 
-/* pravidlo / popis dole */
-.card .rules{
-  position:absolute; left:10px; right:10px; bottom:10px;
-  font-size: 12px; color:#c6d7ee; text-align:center; opacity:.95;
-}
-
-/* foil shine */
-.card::after{
-  content:""; position:absolute; inset:-40% -40%;
-  background: conic-gradient(from 10deg,
-    transparent 0 60%, rgba(255,255,255,.08) 62%, transparent 64% 100%);
-  transform: translateY(-60%) rotate(15deg);
-  transition: transform .8s ease;
-  pointer-events:none;
-}
+/* shine efekt */
+.card::after{ content:""; position:absolute; inset:-40% -40%; background: conic-gradient(from 10deg, transparent 0 60%, rgba(255,255,255,.08) 62%, transparent 64% 100%); transform: translateY(-60%) rotate(15deg); transition: transform .8s ease; pointer-events:none; }
 .card:hover::after{ transform: translateY(10%) rotate(15deg); }
 
 /* cílení */
 .target { box-shadow: 0 0 0 3px #7aa2ffaa, 0 0 30px #7aa2ff44; border-radius:14px; }
 
-/* ✨ hráč panel */
-.player-area { border:1px solid rgba(255,255,255,.06); border-radius:16px; }
-.player-header{ background: linear-gradient(180deg, rgba(255,255,255,.03), transparent); border-bottom:1px solid rgba(255,255,255,.06); }
-
-/* 🎲 kostka overlay – výraznější */
+/* =========================
+   🎲 KOSTKA
+========================= */
 #diceOverlay.show { display:flex; }
 #diceOverlay .ask-box{
-  background: radial-gradient(600px 300px at 50% -20%, rgba(122,162,255,.15), transparent 50%), 
-              linear-gradient(180deg, #141c28, #0d131c);
-  border: 1px solid #2a3b52; 
+  background: radial-gradient(600px 300px at 50% -20%, rgba(122,162,255,.15), transparent 50%), linear-gradient(180deg, #141c28, #0d131c);
+  border: 1px solid #2a3b52;
 }
 #diceResult{
-  font-size: 64px; 
-  animation: diceRoll 1s ease infinite; 
+  font-size: 64px;
+  animation: diceRoll 1s ease infinite;
   text-shadow: 0 8px 20px rgba(0,0,0,.45);
 }
 @keyframes diceRoll{
@@ -430,11 +206,41 @@
   100%{ transform: rotate(0) scale(1); }
 }
 
-/* 📱 úprava pro menší displeje */
-@media (max-width: 520px){
-  .card{ --w: 100%; }
-  .table{ grid-template-columns: 1fr; }
-}
+/* =========================
+   LOG & TIMER
+========================= */
+.log { padding: 12px; max-height: 260px; overflow-y: auto; font-size: 13px; background: #0a1018; border:1px solid #1c2940; border-radius:12px; }
+.log div { margin-bottom: 2px; animation: fadeIn .3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+
+.timerWrap { margin: 8px 0; height: 8px; background: #192233; border-radius: 999px; overflow: hidden; border: 1px solid #2b3b54; }
+.timerBar { height: 100%; width: 100%; background: linear-gradient(90deg, #6ee7ff, #7aa2ff); transition: width .1s linear; }
+.timerBar.red { background: linear-gradient(90deg, #ff8a8a, #ff5b5b); }
+.timerBar.gold { background: linear-gradient(90deg, #ffe082, #ffc13d); }
+
+/* =========================
+   LOBBY
+========================= */
+.lobby-hero{ padding:0; overflow:hidden; border-radius:var(--radius); position:relative }
+.lobby-banner{ width:100%; padding-top:30%; position:relative; overflow:hidden; border-bottom:1px solid rgba(255,255,255,.06) }
+.lobby-banner img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:brightness(.99) contrast(1) }
+.lobby-wrap{ display:grid; grid-template-columns:1.1fr .9fr; gap:0 }
+.lobby-left{ padding:24px; display:flex; flex-direction:column; gap:14px }
+.lobby-right{ padding:22px; border-left:1px solid rgba(255,255,255,.06) }
+.lobby-title{ display:flex; gap:10px; align-items:center }
+.logo-img{ width:54px; height:54px; border-radius:12px; object-fit:contain; background:#0c1420; padding:4px; border:1px solid rgba(255,255,255,.08); box-shadow:0 4px 10px rgba(0,0,0,.5) }
+.glass{ background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)), linear-gradient(180deg, var(--panel), var(--panel-2)); border:1px solid rgba(255,255,255,.12); border-radius:18px; padding:14px }
+.lobby-code{ display:inline-flex; align-items:center; gap:8px; font-weight:800; letter-spacing:1.4px; background:linear-gradient(180deg,#1b2331,#111824); padding:8px 12px; border-radius:999px; border:1px solid rgba(255,255,255,.12); }
+.players-card .list{ margin-top:6px; line-height:1.6; }
+.players-card .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:8px; background:#7aa2ff }
+.cta-row{ display:flex; gap:10px; flex-wrap:wrap; }
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width:980px){ .lobby-wrap{ grid-template-columns:1fr } .lobby-right{ border-left:none; border-top:1px solid rgba(255,255,255,.06) } }
+@media (max-width:930px){ .table { grid-template-columns: 1fr; } .center { grid-template-columns: 1fr; } }
+@media (max-width:520px){ .card{ --w: 100%; } .table{ grid-template-columns: 1fr; } }
 
 
   </style>

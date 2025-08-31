@@ -173,6 +173,30 @@ const META = {
   VEST:{emoji:'🦺',name:'Neprůstřelná vesta',desc:'Při 🔫 hoď kostkou; na ❤️ ignoruješ zásah.'},
 };
 
+const CARD_IMG = {
+  SHOT:     'img/cards/shot.png',
+  DODGE:    'img/cards/dodge.png',
+  KNIFE:    'img/cards/knife.png',
+  MOLOTOV:  'img/cards/molotov.png',
+  SHOOTOUT: 'img/cards/shootout.png',
+  SPRAY:    'img/cards/spray.png',
+  VENDETTA: 'img/cards/vendetta.png',
+  WHISKEY:  'img/cards/whiskey.png',
+  CIGAR:    'img/cards/cigar.png',
+  PRISON:   'img/cards/prison.png',
+  EXTORTION:'img/cards/extortion.png',
+  RAID:     'img/cards/raid.png',
+  W_SAWED:  'img/cards/w_sawed.png',
+  W_DOUBLE: 'img/cards/w_double.png',
+  W_COLT:   'img/cards/w_colt.png',
+  W_TOMMY:  'img/cards/w_tommy.png',
+  W_WINCH:  'img/cards/w_winch.png',
+  W_SPRING: 'img/cards/w_spring.png',
+  VEST:     'img/cards/vest.png',
+};
+const FALLBACK_CARD_IMG = 'img/cards/placeholder.png';
+
+
 function applyState(s) {
   STATE = s;
 
@@ -229,14 +253,14 @@ div.innerHTML = `
     <span>${m.emoji}</span>
     <small>${m.name}</small>
   </div>
-  <div class="corner br">
-    <span>${m.emoji}</span>
-    <small>${m.name}</small>
+
+  <div class="art">
+    <img src="${CARD_IMG[card.type] || FALLBACK_CARD_IMG}" alt="${m.name}">
   </div>
 
-  <div class="art">${m.emoji}</div>
   <div class="rules">${m.desc}</div>
 `;
+
 
   div.onclick = () => onPlay(card);
   hand.appendChild(div);
