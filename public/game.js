@@ -21,14 +21,17 @@ ws.onmessage = (ev) => {
   try { msg = JSON.parse(ev.data); }
   catch { addLog('❗ Neplatná zpráva ze serveru.'); return; }
 
-  if (msg.type === 'lobby') {
-    if (msg.youId) window.__myId = msg.youId;
-    updateLobby(msg.lobby);
+  if (msg.type === 'lobby') { /* ... existující ... */ }
+  if (msg.type === 'state') { /* ... existující ... */ }
+  if (msg.type === 'info')  { /* ... existující ... */ }
+  if (msg.type === 'error') { /* ... existující ... */ }
+
+  // 🔔 NOVÉ: animace hodu kostkou pro všechny
+  if (msg.type === 'dice' && msg.symbol) {
+    showDiceRoll(msg.symbol);
   }
-  if (msg.type === 'state') applyState(msg.state);
-  if (msg.type === 'info') addLog(msg.message);
-  if (msg.type === 'error') addLog('❗ ' + msg.message);
 };
+
 
 /* ========== Utility ========== */
 function myId() { return window.__myId; }
@@ -163,14 +166,14 @@ function applyState(s) {
 // Moje jméno
 document.getElementById('myName').textContent = s.you?.name || 'Já';
 
-// Životy
+// Životy (MOJE)
 meHearts.innerHTML = '';
 const maxHp = s.you?.maxHp ?? 4;
 const hp = s.you?.hp ?? maxHp;
 for (let i = 0; i < maxHp; i++) {
   const span = document.createElement('span');
-  span.className = 'heart';
-  span.textContent = i < hp ? '❤' : '🤍';
+  span.className = 'heart ' + (i < hp ? 'full' : 'empty');
+  span.textContent = '♥';
   meHearts.appendChild(span);
 }
 
@@ -246,12 +249,28 @@ function renderOpponents(resetTargets = false) {
         ${op.vest ? '<span class="badge">🦺 Vesta</span>' : ''}
       </div>`;
 
-    wrap.innerHTML = `
-      <div class="who"><div>${op.name}</div>${roleHTML}</div>
-      ${statusHTML}
-      <div class="hearts">${'❤'.repeat(op.hp)}${'🤍'.repeat(Math.max(0, (op.maxHp||op.hp)-op.hp))}</div>
-      <div class="cards">Karty v ruce: ${op.handCount}</div>
-    `;
+    // 1) Základ bez srdíček:
+wrap.innerHTML = `
+  <div class="who"><div>${op.name}</div>${roleHTML}</div>
+  ${statusHTML}
+  <div class="cards">Karty v ruce: ${op.handCount}</div>
+`;
+
+// 2) Srdíčka jako DOM uzly (stejně velké + barevně odlišené)
+const hearts = document.createElement('div');
+hearts.className = 'hearts';
+const oMax = op.maxHp || op.hp || 0;
+
+for (let i = 0; i < oMax; i++) {
+  const h = document.createElement('span');
+  h.className = 'heart ' + (i < op.hp ? 'full' : 'empty'); // full = aktuální HP, empty = chybějící
+  h.textContent = '♥';
+  hearts.appendChild(h);
+}
+
+// 3) Vlož srdíčka do karty soupeře
+wrap.insertBefore(hearts, wrap.querySelector('.cards'));
+
 
     table.appendChild(wrap);
   });
