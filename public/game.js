@@ -332,25 +332,28 @@ function renderOpponents(resetTargets = false) {
     wrap.setAttribute('data-player-id', op.id);
 
     const roleHTML = `<div class="role-pill ${op.roleRevealed ? 'revealed' : ''}">${op.roleRevealed ? (op.role || '—') : 'Neznámá'}</div>`;
-    const statusHTML = `
-      <div class="status">
-        ${op.inPrison ? '<span class="badge">🚔 Ve vězení</span>' : ''}
-        ${op.weapon ? `<span class="badge">🔧 ${op.weapon.name}</span>` : ''}
-        ${op.vest ? '<span class="badge">🦺 Vesta</span>' : ''}
-      </div>`;
-
     const isTurn = (STATE?.turnPlayerId === op.id);
     const turnHTML = isTurn ? `<span class="turn-badge">Na tahu</span>` : '';
 
-    // základ bez srdíček
+    // 🔹 Ikony vybavení místo badge
+    const equipIcons = [];
+    if (op.weapon) {
+      equipIcons.push(`<img src="${CARD_IMG[op.weapon.type] || FALLBACK_CARD_IMG}" alt="${op.weapon.name}" title="${op.weapon.name}" class="equip-icon">`);
+    }
+    if (op.vest) {
+      equipIcons.push(`<img src="${CARD_IMG.VEST || FALLBACK_CARD_IMG}" alt="Vesta" title="Vesta" class="equip-icon">`);
+    }
+    const equipHTML = equipIcons.length
+      ? `<div class="equip-icons">${equipIcons.join('')}</div>` : '';
+
     wrap.innerHTML = `
       ${turnHTML}
       <div class="who"><div>${op.name}</div>${roleHTML}</div>
-      ${statusHTML}
+      ${equipHTML}
       <div class="cards">Karty v ruce: ${op.handCount}</div>
     `;
 
-    // srdíčka jako stejně velké ikony s barvou
+    // ❤️ Srdíčka
     const hearts = document.createElement('div');
     hearts.className = 'hearts';
     const oMax = op.maxHp || op.hp || 0;
@@ -366,10 +369,14 @@ function renderOpponents(resetTargets = false) {
   });
 
   if (resetTargets) {
-    Array.from(table.querySelectorAll('.opponent')).forEach(n => { n.classList.remove('target'); n.onclick = null; });
+    Array.from(table.querySelectorAll('.opponent')).forEach(n => { 
+      n.classList.remove('target'); 
+      n.onclick = null; 
+    });
     selectedCard = null;
   }
 }
+
 
 
 function isMyTurn(){ return !!(STATE && STATE.turnPlayerId && STATE.turnPlayerId === myId()); }
