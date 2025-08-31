@@ -28,26 +28,40 @@ ws.onmessage = (ev) => {
   catch { addLog('❗ Neplatná zpráva ze serveru.'); return; }
 
   if (msg.type === 'lobby') {
-    if (msg.youId) window.__myId = msg.youId;  // <<< DOPLNĚNO
+    if (msg.youId) window.__myId = msg.youId;
     updateLobby(msg.lobby);
   }
-  if (msg.type === 'state') applyState(msg.state);
-  if (msg.type === 'info')  addLog(msg.message);
-  if (msg.type === 'error') addLog('❗ ' + msg.message);
+  if (msg.type === 'state') {
+    // pokud se změnil hráč na tahu → zvýraznit
+    const prevTurn = STATE?.turnPlayerId;
+    applyState(msg.state);
+    if (prevTurn !== msg.state.turnPlayerId) {
+      const who = findName(msg.state.turnPlayerId) || '—';
+      showNow(`🔁 Na tahu: ${who}`, 'info', 2200);
+    }
+  }
+  if (msg.type === 'info')  {
+    addLog(msg.message);
+    showNow(msg.message, levelFromMessage(msg.message));
+  }
+  if (msg.type === 'error') {
+    addLog('❗ ' + msg.message);
+    showNow('❗ ' + msg.message, 'danger', 3000);
+    showToast('Chyba', msg.message, 'danger', 5000);
+  }
 
-  // 🎲 Globální animace hodu pro všechny
+  // 🎲 kostka – už máš animaci; doplníme i nowbar
   if (msg.type === 'dice' && msg.symbol) {
-    const purposeMap = {
-      PRISON: 'vězení',
-      VEST: 'vesta',
-      OTHER: '—'
-    };
+    const purposeMap = { PRISON: 'vězení', VEST: 'vesta', OTHER: '—' };
     const purposeTxt = purposeMap[msg.purpose] || '—';
     const byName = msg.byName || findName(msg.byId) || 'Hráč';
     showDiceRoll(msg.symbol, `${byName} hází kostkou (${purposeTxt})`);
-    addLog(`🎲 ${byName} hází (${purposeTxt}) → ${msg.symbol}`);
+    const txt = `🎲 ${byName} (${purposeTxt}) → ${msg.symbol}`;
+    addLog(txt);
+    showNow(txt, 'info');
   }
 };
+
 
 
 
@@ -341,17 +355,24 @@ function renderOpponents(resetTargets = false) {
 function isMyTurn(){ return !!(STATE && STATE.turnPlayerId && STATE.turnPlayerId === myId()); }
 
 function onPlay(card){
-  if (!isMyTurn()){ addLog('⏳ Nyní nejste na tahu.'); return; }
-  const noTarget = [ 'WHISKEY','CIGAR','SHOOTOUT','SPRAY','W_SAWED','W_DOUBLE','W_COLT','W_TOMMY','W_WINCH','W_SPRING','VEST' ];
-  if (noTarget.includes(card.type)){
-    addLog(`▶️ Hraji ${META[card.type]?.name || card.type}.`);
+  if (!isMyTurn()){ 
+    const m = '⏳ Nyní nejste na tahu.';
+    addLog(m); showNow(m, 'warn'); 
+    return; 
+  }
+  const name = META[card.type]?.name || card.type;
+  const m = `▶️ Hraji ${name}.`;
+  if (['WHISKEY','CIGAR','SHOOTOUT','SPRAY','W_SAWED','W_DOUBLE','W_COLT','W_TOMMY','W_WINCH','W_SPRING','VEST'].includes(card.type)){
+    addLog(m); showNow(m, 'info');
     send({ type:'play', cardId: card.id });
     return;
   }
   selectedCard = card;
-  addLog(`🎯 Vyberte cíl pro ${META[card.type]?.name || card.type}.`);
+  const pick = `🎯 Vyber cíl pro ${name}.`;
+  addLog(pick); showNow(pick, 'info');
   highlightTargets();
 }
+
 
 function highlightTargets(){
   const nodes = Array.from(table.querySelectorAll('.opponent'));
@@ -483,4 +504,40 @@ function showDiceRoll(symbol, titleText = '🎲 Hod kostkou') {
     diceEl.textContent = symbol;
     setTimeout(() => overlay.classList.remove('show'), 1500);
   }, 1800);
+}
+
+/* ===== Notifier ===== */
+let nowTimeout = null;
+
+function levelFromMessage(text){
+  // hrubé mapování podle emoji/klíčových slov
+  if (/☠|❌|⚠️|error|chyba|zranění|padl/i.test(text)) return 'danger';
+  if (/🚔|pozor|varování|stanné/i.test(text)) return 'warn';
+  if (/🥃|vyléčí|vyhr|✔|✅/i.test(text)) return 'ok';
+  return 'info';
+}
+
+function showNow(text, level='info', holdMs=2400){
+  const bar = document.getElementById('nowBar');
+  if (!bar) return;
+  bar.className = `nowbar show ${level}`;
+  bar.textContent = text;
+  clearTimeout(nowTimeout);
+  nowTimeout = setTimeout(()=> { bar.classList.remove('show'); }, holdMs);
+}
+
+// volitelné – queue toasts
+function showToast(title, body='', level='info', ttl=4000){
+  const box = document.getElementById('toasts'); if(!box) return;
+  const el = document.createElement('div');
+  el.className = `toast ${level}`;
+  el.innerHTML = `
+    <span class="close">×</span>
+    <div class="title">${title}</div>
+    ${body ? `<div class="body">${body}</div>` : '' }
+  `;
+  const close = ()=>{ el.style.animation = 'toastOut .2s ease forwards'; setTimeout(()=>el.remove(), 180); };
+  el.querySelector('.close').onclick = close;
+  box.appendChild(el);
+  setTimeout(close, ttl);
 }
