@@ -181,3 +181,62 @@
   align-items: center;
   gap: 10px;
 }
+
+/* --- Moje vybavení jako kartičky --- */
+.player-equip { margin-top: 10px; }
+.equip-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 10px;
+}
+
+.equip-card {
+  position: relative;
+  background: linear-gradient(180deg, #151c27, #101722);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 12px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 8px 18px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06);
+  min-height: 100px;
+}
+
+.equip-card .imgwrap {
+  width: 48px; height: 48px;
+  display: grid; place-items: center;
+  background: #0e141d;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0,0,0,.35);
+}
+.equip-card img {
+  max-width: 42px; max-height: 42px; object-fit: contain;
+  display: block;
+}
+
+.equip-card .label {
+  font-size: 12px; text-align: center; color: #cfe0ff; line-height: 1.25;
+  min-height: 2em;
+}
+
+.equip-card.empty {
+  opacity: .55;
+  background: linear-gradient(180deg, #111823, #0d121b);
+  border-style: dashed;
+}
+.equip-card.empty .label { color: #93a4b8; }
+.equip-card .chip {
+  position: absolute; top: 6px; right: 6px;
+  font-size: 10px; padding: 2px 6px; border-radius: 999px;
+  background: #263248; color: #d8e6ff; border: 1px solid rgba(255,255,255,.12);
+}
+
+/* reuse pro ikonky u oponentů (pokud ještě nemáš) */
+.equip-icons { display:flex; gap:6px; margin:6px 0 2px; align-items:center; }
+.equip-icon  { width:28px; height:28px; object-fit:contain; border-radius:6px;
+  background:#0e141d; border:1px solid rgba(255,255,255,.1); padding:2px;
+  box-shadow:0 2px 8px rgba(0,0,0,.35);
+}

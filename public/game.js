@@ -264,8 +264,65 @@ if (s.you.inPrison) {
 }
 
 // Vybavení
-document.getElementById('myWeapon').textContent = s.you.weapon ? s.you.weapon.name : 'Žádná';
-document.getElementById('myVest').textContent = s.you.vest ? 'Ano' : 'Žádná';
+renderMyEquip(s.you);
+
+function renderMyEquip(you) {
+  const grid = document.getElementById('myEquip');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  // --- Zbraň (slot)
+  if (you.weapon) {
+    const w = you.weapon;
+    const wEl = document.createElement('div');
+    wEl.className = 'equip-card';
+    wEl.innerHTML = `
+      <span class="chip">Zbraň</span>
+      <div class="imgwrap">
+        <img src="${CARD_IMG[w.type] || FALLBACK_CARD_IMG}" alt="${w.name}" title="${w.name}">
+      </div>
+      <div class="label">${w.name}</div>
+    `;
+    grid.appendChild(wEl);
+  } else {
+    const wEl = document.createElement('div');
+    wEl.className = 'equip-card empty';
+    wEl.innerHTML = `
+      <span class="chip">Zbraň</span>
+      <div class="imgwrap">
+        <img src="${FALLBACK_CARD_IMG}" alt="Žádná zbraň">
+      </div>
+      <div class="label">Žádná</div>
+    `;
+    grid.appendChild(wEl);
+  }
+
+  // --- Vesta (slot)
+  if (you.vest) {
+    const vEl = document.createElement('div');
+    vEl.className = 'equip-card';
+    vEl.innerHTML = `
+      <span class="chip">Vesta</span>
+      <div class="imgwrap">
+        <img src="${CARD_IMG.VEST || FALLBACK_CARD_IMG}" alt="Neprůstřelná vesta" title="Neprůstřelná vesta">
+      </div>
+      <div class="label">Neprůstřelná vesta</div>
+    `;
+    grid.appendChild(vEl);
+  } else {
+    const vEl = document.createElement('div');
+    vEl.className = 'equip-card empty';
+    vEl.innerHTML = `
+      <span class="chip">Vesta</span>
+      <div class="imgwrap">
+        <img src="${FALLBACK_CARD_IMG}" alt="Bez vesty">
+      </div>
+      <div class="label">Žádná</div>
+    `;
+    grid.appendChild(vEl);
+  }
+}
+
 
 // Ruka
 hand.innerHTML = '';
