@@ -199,7 +199,7 @@
     }
 
     /* =========================
-       🧭 LOBBY VZHLED (DŮLEŽITÉ!)
+       🧭 LOBBY VZHLED
     ========================= */
     .lobby-hero{ padding:0; overflow:hidden; border-radius:var(--radius); position:relative }
     .lobby-banner{ width:100%; padding-top:30%; position:relative; overflow:hidden; border-bottom:1px solid rgba(255,255,255,.06) }
@@ -229,98 +229,62 @@
     @media (max-width:520px) { .card { width: 100%; } }
 
     /* === Board layout === */
-.game-table {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 14px;
-  margin-top: 14px;
-}
+    .game-table {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .opponents-area {
+      background: linear-gradient(180deg, #10151c, #0b1016);
+      border-radius: var(--radius);
+    }
+    .player-area {
+      background: linear-gradient(180deg, #141c28, #0e141c);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .player-header {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      padding: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .player-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.12);
+      background: #0b1016;
+      box-shadow: var(--shadow);
+    }
+    .player-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .player-info { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .player-name { font-weight: 800; font-size: 18px; }
+    .player-hp { font-size: 18px; display: flex; gap: 2px; }
+    .player-equip {
+      display: flex; flex-direction: column; gap: 4px; padding: 8px;
+      background: rgba(255,255,255,0.02); border-radius: 12px; margin: 0 8px;
+    }
+    .equip-slot { font-size: 14px; color: var(--muted); }
+    .player-hand { padding: 8px; }
+    .log-panel { margin-top: 14px; }
 
-.opponents-area {
-  background: linear-gradient(180deg, #10151c, #0b1016);
-  border-radius: var(--radius);
-}
-
-.player-area {
-  background: linear-gradient(180deg, #141c28, #0e141c);
-  border-radius: var(--radius);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.player-header {
-  display: flex;
-  gap: 14px;
-  align-items: center;
-  padding: 8px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-}
-.player-avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid rgba(255,255,255,.12);
-  background: #0b1016;
-  box-shadow: var(--shadow);
-}
-.player-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.player-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.player-name {
-  font-weight: 800;
-  font-size: 18px;
-}
-.player-hp {
-  font-size: 18px;
-  display: flex;
-  gap: 2px;
-}
-.player-equip {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 8px;
-  background: rgba(255,255,255,0.02);
-  border-radius: 12px;
-  margin: 0 8px;
-}
-.equip-slot {
-  font-size: 14px;
-  color: var(--muted);
-}
-
-.player-hand {
-  padding: 8px;
-}
-
-.log-panel {
-  margin-top: 14px;
-}
-
-/* Responsivita */
-@media(max-width: 800px){
-  .game-table {
-    grid-template-columns: 1fr;
-  }
-}
-
+    @media(max-width: 800px){
+      .game-table { grid-template-columns: 1fr; }
+    }
   </style>
+
   <!-- DŮLEŽITÉ: defer zajistí, že DOM existuje dřív, než game.js běží -->
   <script src="game.js" defer></script>
 </head>
 <body>
   <div id="app" class="grid">
-    
+
     <!-- LOBBY -->
     <section class="panel lobby-hero" id="lobbyPanel" aria-label="Lobby">
       <!-- HERO BANNER -->
@@ -387,13 +351,21 @@
       </div>
     </section>
 
-        <!-- BOARD -->
+    <!-- BOARD -->
     <section class="panel" id="boardPanel" style="display:none" aria-label="Herní stůl">
       <div class="board-top row" style="justify-content:space-between;align-items:flex-start">
         <div>
           <b>🕴️ Mafia Stand-off</b> <span class="muted" id="roomTag"></span>
           <div class="hud" id="hud"></div>
           <div class="hud" id="continental"></div>
+
+          <!-- ✅ Nový HUD řádek se správnými ID -->
+          <div class="row" style="margin-top:8px; gap:16px; font-size:14px">
+            <div>🔁 Na tahu: <b id="turnName">—</b></div>
+            <div>📦 Balíček: <b id="deckCount">0</b></div>
+            <div>🗑️ Odhazovací: <b id="discardCount">0</b></div>
+          </div>
+
           <!-- Global event timer -->
           <div id="timerArea" style="display:none">
             <div class="hud" id="timerText"></div>
@@ -408,7 +380,7 @@
 
       <!-- Herní stůl -->
       <div class="game-table">
-        <!-- Nepřátelé -->
+        <!-- Ostatní hráči -->
         <div class="opponents-area panel">
           <div class="title">Ostatní hráči</div>
           <div class="table" id="table"></div>
@@ -416,26 +388,25 @@
 
         <!-- Moje postava -->
         <div class="player-area panel">
-  <div class="player-header">
-    <div class="player-avatar">
-      <img src="img/player.png" alt="Moje postava">
-    </div>
-    <div class="player-info">
-      <div class="player-name" id="myName">Moje postava</div>
-      <div class="player-hp hearts" id="meHearts"></div>
-      <div id="playerStatus" class="status"></div>
-    </div>
-  </div>
-  <div class="player-equip">
-    <div class="equip-slot">🔫 Zbraň: <span id="myWeapon">Žádná</span></div>
-    <div class="equip-slot">🦺 Vesta: <span id="myVest">Žádná</span></div>
-  </div>
-  <div class="player-hand">
-    <div class="title">💼 Moje karty</div>
-    <div id="hand" class="hand"></div>
-  </div>
-</div>
-
+          <div class="player-header">
+            <div class="player-avatar">
+              <img src="img/player.png" alt="Moje postava">
+            </div>
+            <div class="player-info">
+              <div class="player-name" id="myName">Moje postava</div>
+              <div class="player-hp hearts" id="meHearts"></div>
+              <div id="playerStatus" class="status"></div>
+            </div>
+          </div>
+          <div class="player-equip">
+            <div class="equip-slot">🔫 Zbraň: <span id="myWeapon">Žádná</span></div>
+            <div class="equip-slot">🦺 Vesta: <span id="myVest">Žádná</span></div>
+          </div>
+          <div class="player-hand">
+            <div class="title">💼 Moje karty</div>
+            <div id="hand" class="hand"></div>
+          </div>
+        </div>
       </div>
 
       <!-- Log -->
