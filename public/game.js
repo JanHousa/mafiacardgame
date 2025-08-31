@@ -330,7 +330,21 @@ function renderOpponents(resetTargets = false) {
     const wrap = document.createElement('div');
     wrap.className = 'opponent' + (op.dead ? ' dead' : '');
     wrap.setAttribute('data-player-id', op.id);
+    
+    // ❤️ Srdíčka
+    const hearts = document.createElement('div');
+    hearts.className = 'hearts';
+    const oMax = op.maxHp || op.hp || 0;
+    for (let i = 0; i < oMax; i++) {
+      const h = document.createElement('span');
+      h.className = 'heart ' + (i < op.hp ? 'full' : 'empty');
+      h.textContent = '♥';
+      hearts.appendChild(h);
+    }
+    wrap.insertBefore(hearts, wrap.querySelector('.cards'));
 
+    table.appendChild(wrap);
+  });
     const roleHTML = `<div class="role-pill ${op.roleRevealed ? 'revealed' : ''}">${op.roleRevealed ? (op.role || '—') : 'Neznámá'}</div>`;
     const isTurn = (STATE?.turnPlayerId === op.id);
     const turnHTML = isTurn ? `<span class="turn-badge">Na tahu</span>` : '';
@@ -353,20 +367,7 @@ function renderOpponents(resetTargets = false) {
       <div class="cards">Karty v ruce: ${op.handCount}</div>
     `;
 
-    // ❤️ Srdíčka
-    const hearts = document.createElement('div');
-    hearts.className = 'hearts';
-    const oMax = op.maxHp || op.hp || 0;
-    for (let i = 0; i < oMax; i++) {
-      const h = document.createElement('span');
-      h.className = 'heart ' + (i < op.hp ? 'full' : 'empty');
-      h.textContent = '♥';
-      hearts.appendChild(h);
-    }
-    wrap.insertBefore(hearts, wrap.querySelector('.cards'));
-
-    table.appendChild(wrap);
-  });
+    
 
   if (resetTargets) {
     Array.from(table.querySelectorAll('.opponent')).forEach(n => { 
