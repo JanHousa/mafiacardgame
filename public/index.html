@@ -243,6 +243,23 @@ a:hover { color: var(--accent-2); }
 @media (max-width:520px){ .card{ --w: 100%; } .table{ grid-template-columns: 1fr; } }
 
 
+/* ========== Overlayy (schované modály) ========== */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  display: none; /* 🔥 Přidáno: defaultně skryté */
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+  padding: 20px;
+}
+.overlay.show {
+  display: flex; /* 🔥 Zobrazí se jen s .show */
+  animation: fadeIn .4s ease;
+}
+
+
   </style>
 
   <!-- DŮLEŽITÉ: defer zajistí, že DOM existuje dřív, než game.js běží -->
