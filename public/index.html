@@ -139,7 +139,11 @@
       color: #d3deea; background: #1e2633;
     }
     .hearts { display: flex; gap: 2px; }
-    .heart { font-size: 16px; filter: drop-shadow(0 2px 6px rgba(0,0,0,.35)); }
+    .heart {
+  font-size: 18px;
+  color: red; /* přidáno */
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,.35));
+}
     .cards { font-size: 13px; color: var(--muted); }
 
     /* =========================
@@ -277,6 +281,19 @@
     @media(max-width: 800px){
       .game-table { grid-template-columns: 1fr; }
     }
+
+    #diceResult {
+  animation: diceRoll 1s ease infinite;
+}
+
+@keyframes diceRoll {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(20deg); }
+  50% { transform: rotate(-20deg); }
+  75% { transform: rotate(10deg); }
+  100% { transform: rotate(0deg); }
+}
+
   </style>
 
   <!-- DŮLEŽITÉ: defer zajistí, že DOM existuje dřív, než game.js běží -->
@@ -322,7 +339,7 @@
             <div id="lobbyInfo" class="hint" style="margin-top:8px"></div>
           </div>
 
-          <div class="hint">Verze alfa 0.1.0</div>
+          <div class="hint">Verze 0.1.2-alpha</div>
         </div>
 
         <!-- RIGHT -->
@@ -457,5 +474,14 @@
       </div>
     </div>
   </div>
+
+  <!-- Hod kostkou -->
+  <div class="overlay" id="diceOverlay">
+  <div class="ask-box" style="text-align:center">
+    <h3>🎲 Hod kostkou</h3>
+    <div id="diceResult" style="font-size:50px; margin-top:10px;">🎲</div>
+  </div>
+</div>
+
 </body>
 </html>

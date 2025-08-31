@@ -305,9 +305,19 @@ backLobbyBtn.onclick = () => {
 
 /* Konec tahu */
 endTurnBtn.onclick = () => {
-  if (!isMyTurn()) { addLog('⏳ Nyní nejste na tahu.'); return; }
-  send({ type:'endTurn' });
+  if (!isMyTurn()) { 
+    addLog('⏳ Nyní nejste na tahu.'); 
+    return; 
+  }
+
+  // Pokud byl hráč ve vězení, po tomto tahu se resetuje
+  if (STATE.you?.inPrison) {
+    send({ type: 'statusUpdate', field: 'inPrison', value: false });
+  }
+
+  send({ type: 'endTurn' });
 };
+
 
 /* ---------- Timer helpers ---------- */
 function showGlobalTimer(text, endsAtMs){
@@ -374,3 +384,26 @@ function showVendettaModal(endsAt){
   vendNo .onclick = () => { send({ type:'eventReaction', choice:'PASS' }); hideAllModals(); };
 }
 
+function showDiceRoll(symbol) {
+  const overlay = document.getElementById('diceOverlay');
+  const diceEl = document.getElementById('diceResult');
+  overlay.classList.add('show');
+  diceEl.textContent = '🎲';
+  
+  // Simulace animace
+  let symbols = ['🎲','💥','🚔','❤️','🔫','💰','🃏'];
+  let i = 0;
+  const interval = setInterval(() => {
+    diceEl.textContent = symbols[i % symbols.length];
+    i++;
+  }, 120);
+
+  setTimeout(() => {
+    clearInterval(interval);
+    diceEl.textContent = symbol;
+    setTimeout(() => overlay.classList.remove('show'), 1500);
+  }, 2000); // po 2s ukáže výsledek
+}
+
+// Použití po hodu
+// showDiceRoll('❤️');
