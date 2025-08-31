@@ -27,7 +27,10 @@ ws.onmessage = (ev) => {
   try { msg = JSON.parse(ev.data); }
   catch { addLog('❗ Neplatná zpráva ze serveru.'); return; }
 
-  if (msg.type === 'lobby') updateLobby(msg.lobby);
+  if (msg.type === 'lobby') {
+    if (msg.youId) window.__myId = msg.youId;  // <<< DOPLNĚNO
+    updateLobby(msg.lobby);
+  }
   if (msg.type === 'state') applyState(msg.state);
   if (msg.type === 'info')  addLog(msg.message);
   if (msg.type === 'error') addLog('❗ ' + msg.message);
