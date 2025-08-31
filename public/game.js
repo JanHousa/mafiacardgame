@@ -160,28 +160,46 @@ function applyState(s) {
   const myRole = s.you?.role ? `• Moje role: ${s.you.role}` : '';
   hud.textContent = `Na tahu: ${findName(s.turnPlayerId) || '—'} ${isMyTurn() ? '(JÁ)' : ''} ${myRole}`;
 
-  // Životy
-  meHearts.innerHTML = '';
-  const maxHp = s.you?.maxHp ?? 4;
-  const hp = s.you?.hp ?? maxHp;
-  for (let i = 0; i < maxHp; i++) {
-    const span = document.createElement('span');
-    span.className = 'heart';
-    span.textContent = i < hp ? '❤' : '🤍';
-    meHearts.appendChild(span);
-  }
+// Moje jméno
+document.getElementById('myName').textContent = s.you?.name || 'Já';
 
-  // Ruka
-  hand.innerHTML = '';
-  (s.you?.hand || []).forEach(card => {
-    const m = META[card.type] || { name: card.type, emoji: '🃏', desc: ''};
-    const div = document.createElement('div');
-    div.className = 'card';
-    div.setAttribute('data-card-id', card.id);
-    div.innerHTML = `<div class="ct">${m.name}</div><div class="emoji">${m.emoji}</div><div class="text">${m.desc}</div>`;
-    div.onclick = () => onPlay(card);
-    hand.appendChild(div);
-  });
+// Životy
+meHearts.innerHTML = '';
+const maxHp = s.you?.maxHp ?? 4;
+const hp = s.you?.hp ?? maxHp;
+for (let i = 0; i < maxHp; i++) {
+  const span = document.createElement('span');
+  span.className = 'heart';
+  span.textContent = i < hp ? '❤' : '🤍';
+  meHearts.appendChild(span);
+}
+
+// Statusy
+const playerStatus = document.getElementById('playerStatus');
+playerStatus.innerHTML = '';
+if (s.you.inPrison) {
+  const badge = document.createElement('span');
+  badge.className = 'badge';
+  badge.textContent = '🚔 Ve vězení';
+  playerStatus.appendChild(badge);
+}
+
+// Vybavení
+document.getElementById('myWeapon').textContent = s.you.weapon ? s.you.weapon.name : 'Žádná';
+document.getElementById('myVest').textContent = s.you.vest ? 'Ano' : 'Žádná';
+
+// Ruka
+hand.innerHTML = '';
+(s.you?.hand || []).forEach(card => {
+  const m = META[card.type] || { name: card.type, emoji: '🃏', desc: '' };
+  const div = document.createElement('div');
+  div.className = 'card';
+  div.setAttribute('data-card-id', card.id);
+  div.innerHTML = `<div class="ct">${m.name}</div><div class="emoji">${m.emoji}</div><div class="text">${m.desc}</div>`;
+  div.onclick = () => onPlay(card);
+  hand.appendChild(div);
+});
+
 
   renderOpponents(true);
 
