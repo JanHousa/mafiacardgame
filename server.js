@@ -713,43 +713,43 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, ()=> console.log(`✅ Server běží na http://localhost:${PORT}`));
 
 function startGame(lobby){
-  if (lobby.started) return;
+  if (!lobby || lobby.started) return;
+  if (lobby.players.length < 2) {
+    info(lobby, "❗ Potřebujete alespoň 2 hráče.");
+    return;
+  }
 
-  // reset lobby
+  // reset stavu lobby
   lobby.started = true;
-  lobby.turnIdx = 0;
-  lobby.deck = makeDeck();
-  lobby.discard = [];
   lobby.pending = null;
-  lobby.roundNote = null;
+  lobby.discard = [];
+  lobby.deck = makeDeck();
+  lobby.turnIdx = 0;
 
-  // role, HP a základní stav
-  assignRoles(lobby);
+  // reset každého hráče
   for (const p of lobby.players){
     p.ready = false;
     p.dead = false;
-    p.hand = [];
+    p.revealedRole = false;
+    p.inPrison = false;
     p.weapon = null;
     p.vest = false;
-    p.inPrison = false;
+    p.hand = [];
     p._shotThisTurn = 0;
     p._dealtDamageThisRound = false;
-    // hp/maxHp už nastavuje assignRoles, ale pro jistotu:
-    p.hp = p.maxHp || 4;
   }
 
-  // rozdej úvodní karty (např. 5)
-  for (let i = 0; i < 5; i++){
-    for (const p of lobby.players){
-      drawCard(lobby, p, 1);
-    }
-  }
+  // přiřazení rolí + HP
+  assignRoles(lobby);
+
+  // počáteční ruka (4 karty)
+  for (const p of lobby.players) drawCard(lobby, p, 4);
 
   info(lobby, "🎬 Hra začíná!");
-  // pošleme počáteční stav všem
-  broadcast(lobby,"state",(v)=> personalizedState(lobby, v));
-  // spustíme první tah (ten hráč si ještě lízne 2 dle tvojí logiky)
+  // ať se klientům přepne z lobby na board
+  broadcast(lobby, "lobby", (v)=>({ lobby: lobbySummary(lobby), youId: v.id }));
+
+  // první tah (líznutí atd.) + rozeslat stav
   startTurn(lobby);
-  // a znovu pošleme stav, ať se promítne tah + líznuté karty
-  broadcast(lobby,"state",(v)=> personalizedState(lobby, v));
+  broadcast(lobby, "state", (v)=> personalizedState(lobby, v));
 }
