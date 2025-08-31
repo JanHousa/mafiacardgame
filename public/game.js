@@ -312,27 +312,28 @@ function renderOpponents(resetTargets = false) {
         ${op.vest ? '<span class="badge">🦺 Vesta</span>' : ''}
       </div>`;
 
-    // 1) Základ bez srdíček:
-wrap.innerHTML = `
-  <div class="who"><div>${op.name}</div>${roleHTML}</div>
-  ${statusHTML}
-  <div class="cards">Karty v ruce: ${op.handCount}</div>
-`;
+    const isTurn = (STATE?.turnPlayerId === op.id);
+    const turnHTML = isTurn ? `<span class="turn-badge">Na tahu</span>` : '';
 
-// 2) Srdíčka jako DOM uzly (stejně velké + barevně odlišené)
-const hearts = document.createElement('div');
-hearts.className = 'hearts';
-const oMax = op.maxHp || op.hp || 0;
+    // základ bez srdíček
+    wrap.innerHTML = `
+      ${turnHTML}
+      <div class="who"><div>${op.name}</div>${roleHTML}</div>
+      ${statusHTML}
+      <div class="cards">Karty v ruce: ${op.handCount}</div>
+    `;
 
-for (let i = 0; i < oMax; i++) {
-  const h = document.createElement('span');
-  h.className = 'heart ' + (i < op.hp ? 'full' : 'empty');
-  h.textContent = '♥';
-  hearts.appendChild(h);
-}
-wrap.insertBefore(hearts, wrap.querySelector('.cards'));
-
-
+    // srdíčka jako stejně velké ikony s barvou
+    const hearts = document.createElement('div');
+    hearts.className = 'hearts';
+    const oMax = op.maxHp || op.hp || 0;
+    for (let i = 0; i < oMax; i++) {
+      const h = document.createElement('span');
+      h.className = 'heart ' + (i < op.hp ? 'full' : 'empty');
+      h.textContent = '♥';
+      hearts.appendChild(h);
+    }
+    wrap.insertBefore(hearts, wrap.querySelector('.cards'));
 
     table.appendChild(wrap);
   });
@@ -342,6 +343,7 @@ wrap.insertBefore(hearts, wrap.querySelector('.cards'));
     selectedCard = null;
   }
 }
+
 
 function isMyTurn(){ return !!(STATE && STATE.turnPlayerId && STATE.turnPlayerId === myId()); }
 
