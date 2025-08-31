@@ -1,0 +1,18 @@
+.overlay { position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; z-index:1000; padding:20px; }
+.overlay.show { display:flex; animation:fadeIn .4s ease; }
+.ask-box { background:linear-gradient(180deg, #17202c, #0e141c); border:1px solid #2a3b52; border-radius:16px; padding:16px; max-width:520px; width:100%; box-shadow:var(--shadow); text-align:center; }
+
+/* Log */
+.log { padding:12px; max-height:260px; overflow-y:auto; font-size:13px; background:#0a1018; border:1px solid #1c2940; border-radius:12px; }
+.log div { margin-bottom:2px; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from {opacity:0;transform:translateY(3px);} to{opacity:1;transform:none;} }
+
+/* Timer */
+.timerWrap { margin:8px 0; height:8px; background:#192233; border-radius:999px; overflow:hidden; border:1px solid #2b3b54; }
+.timerBar { height:100%; width:100%; background:linear-gradient(90deg, #6ee7ff, #7aa2ff); transition:width .1s linear; }
+.timerBar.red { background:linear-gradient(90deg, #ff8a8a, #ff5b5b); }
+.timerBar.gold { background:linear-gradient(90deg, #ffe082, #ffc13d); }
+
+/* Kostka */
+#diceResult { font-size:64px; animation:diceRoll 1s ease infinite; text-shadow:0 8px 20px rgba(0,0,0,.45); }
+@keyframes diceRoll { 0%{transform:rotate(0) scale(1);}25%{transform:rotate(10deg) scale(1.05);}50%{transform:rotate(-8deg) scale(1.08);}75%{transform:rotate(6deg) scale(1.05);}100%{transform:rotate(0) scale(1);} }

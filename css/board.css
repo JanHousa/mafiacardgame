@@ -1,0 +1,43 @@
+.game-table {
+  position: relative;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,.05), transparent 60%),
+    radial-gradient(800px 500px at 80% 10%, rgba(122,162,255,.08), transparent 60%),
+    radial-gradient(1200px 700px at 20% 120%, rgba(94,234,212,.06), transparent 60%),
+    #0b1217;
+  border-radius: 24px;
+  border: 1px solid rgba(255,255,255,.06);
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.03), 0 30px 80px rgba(0,0,0,.55);
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 14px;
+  min-height: 420px;
+}
+.opponents-area, .player-area { background: rgba(8,12,18,.55); backdrop-filter: blur(4px); }
+
+/* Oponenti */
+.table { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:14px; }
+.opponent {
+  background: linear-gradient(180deg, rgba(23,30,43,.9), rgba(14,20,28,.92));
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px;
+  padding: 12px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04);
+  position: relative;
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.opponent:hover { transform: translateY(-2px); border-color: #7aa2ff55; box-shadow:0 16px 34px rgba(0,0,0,.5); }
+.opponent.dead { opacity:.55; filter: grayscale(.25); }
+.turn-badge { position:absolute; top:8px; right:8px; font-size:11px; padding:4px 8px; border-radius:999px; background:#263248; color:#d8e6ff; border:1px solid rgba(255,255,255,.12); box-shadow: 0 6px 14px rgba(0,0,0,.35); pointer-events:none; }
+
+/* Player panel */
+.player-header { display:flex; flex-direction: row; align-items:center; gap:14px; }
+.player-avatar { width:64px; height:64px; border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,.12); background:#0b1016; box-shadow: var(--shadow); flex-shrink:0; }
+.player-avatar img { width:100%; height:100%; object-fit:cover; }
+
+/* Životy */
+.hearts { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+.heart { font-size:20px; filter:drop-shadow(0 2px 6px rgba(0,0,0,.35)); }
+.heart.full { color:#ff5252; text-shadow:0 0 10px rgba(255,82,82,.25); }
+.heart.empty { color:#3a475b; opacity:.9; }

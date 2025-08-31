@@ -1,0 +1,13 @@
+.lobby-hero { padding:0; overflow:hidden; border-radius:var(--radius); position:relative; }
+.lobby-banner { width:100%; padding-top:30%; position:relative; overflow:hidden; border-bottom:1px solid rgba(255,255,255,.06); }
+.lobby-banner img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:brightness(.99) contrast(1); }
+.lobby-wrap { display:grid; grid-template-columns:1.1fr .9fr; gap:0; }
+.lobby-left { padding:24px; display:flex; flex-direction:column; gap:14px; }
+.lobby-right { padding:22px; border-left:1px solid rgba(255,255,255,.06); }
+.lobby-title { display:flex; gap:10px; align-items:center; }
+.logo-img { width:54px; height:54px; border-radius:12px; object-fit:contain; background:#0c1420; padding:4px; border:1px solid rgba(255,255,255,.08); box-shadow:0 4px 10px rgba(0,0,0,.5); }
+.glass { background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)), linear-gradient(180deg, var(--panel), var(--panel-2)); border:1px solid rgba(255,255,255,.12); border-radius:18px; padding:14px; }
+.lobby-code { display:inline-flex; align-items:center; gap:8px; font-weight:800; letter-spacing:1.4px; background:linear-gradient(180deg,#1b2331,#111824); padding:8px 12px; border-radius:999px; border:1px solid rgba(255,255,255,.12); }
+.players-card .list { margin-top:6px; line-height:1.6; }
+.players-card .dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:8px; background:#7aa2ff; }
+.cta-row { display:flex; gap:10px; flex-wrap:wrap; }

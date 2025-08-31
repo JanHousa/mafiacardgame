@@ -1,0 +1,4 @@
+@media (max-width:980px){ .lobby-wrap{grid-template-columns:1fr;} .lobby-right{border-left:none; border-top:1px solid rgba(255,255,255,.06);} }
+@media (max-width:930px){ .table{grid-template-columns:1fr;} .center{grid-template-columns:1fr;} }
+@media (max-width:980px){ .game-table{grid-template-columns:1fr;} }
+@media (max-width:520px){ .card{--w:100%;} .table{grid-template-columns:1fr;} }

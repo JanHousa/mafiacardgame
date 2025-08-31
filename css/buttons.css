@@ -1,0 +1,19 @@
+.btn {
+  border: 1px solid rgba(255,255,255,.08);
+  background: linear-gradient(180deg, #1f2836, #151b25);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  font-weight: 600;
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+.btn:hover:not(:disabled) { transform: translateY(-1px); border-color: rgba(255,255,255,.18); }
+.btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+.btn-primary { background: linear-gradient(180deg, #2a3344, #18202e); border-color: #3b4a63; }
+.btn-success { background: linear-gradient(180deg, #1f3a2e, #10261f); border-color: #1b6b53; }
+.btn-secondary { background: linear-gradient(180deg, #1f2836, #151b25); }
+.btn.pill { border-radius: 999px; padding: 12px 16px; font-weight: 800; }
