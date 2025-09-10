@@ -4,7 +4,9 @@ Karetní hra s mafiánskou tematikou s unikátními rolemi, zbraněmi a speciál
 <a href="https://mafiacardgame.onrender.com/" target="_blank">
   <img src="https://img.shields.io/badge/Play%20Now-%F0%9F%8E%AE-blue?style=for-the-badge" />
 </a>
+
 Počkejte pár vteřin, než se hra načte, je hostovaná na free službě.
+
 ---
 
 ## Ukázka hry
